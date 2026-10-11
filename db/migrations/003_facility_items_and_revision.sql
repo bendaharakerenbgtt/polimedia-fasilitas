@@ -9,6 +9,15 @@ BEGIN
   ) THEN
     ALTER TYPE booking_status ADD VALUE 'REVISION';
   END IF;
+
+  FOR v IN SELECT unnest(ARRAY['BO', 'BSO', 'ODD']) LOOP
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_enum JOIN pg_type ON pg_enum.enumtypid = pg_type.oid
+      WHERE typname = 'org_type' AND enumlabel = v
+    ) THEN
+      EXECUTE format('ALTER TYPE org_type ADD VALUE %L', v);
+    END IF;
+  END LOOP;
 END $$;
 
 CREATE TABLE IF NOT EXISTS facility_items (
