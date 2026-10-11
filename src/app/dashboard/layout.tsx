@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/server/auth";
-import { logoutAction } from "@/app/actions/auth";
+import { LogoutButton } from "./LogoutButton";
 import { query } from "@/server/db";
 import { ROLE_LABEL } from "@/lib/roles";
 
@@ -102,14 +102,7 @@ export default async function DashboardLayout({
               </div>
             </div>
 
-            <form action={logoutAction}>
-              <button
-                type="submit"
-                className="text-xs font-medium text-slate-500 hover:text-rose-600 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-rose-200 transition"
-              >
-                Keluar
-              </button>
-            </form>
+            <LogoutButton />
           </div>
         </div>
       </nav>
