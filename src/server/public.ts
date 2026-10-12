@@ -1,4 +1,4 @@
-import { query, type Db } from "./db";
+import { query, getPool, type Db } from "./db";
 import { localDate, toLocalInput, fmtTime, fmtRange } from "@/lib/time";
 
 export type CurrentUsageInfo = {
@@ -54,7 +54,7 @@ export type PublicScheduleItem = {
  * - Pihak mana yang menggunakan & nama acara
  * - Hingga jam berapa penggunaan berlangsung
  */
-export async function getPublicFacilities(db: Db = query as any): Promise<PublicFacility[]> {
+export async function getPublicFacilities(db: Db = getPool()): Promise<PublicFacility[]> {
   const facs = await query<any>(
     `SELECT f.*,
       (
@@ -149,8 +149,8 @@ export async function getPublicFacilities(db: Db = query as any): Promise<Public
  * Mengambil jadwal kegiatan terkonfirmasi (APPROVED) untuk portal publik.
  */
 export async function getPublicConfirmedSchedules(
-  db: Db = query as any,
-  facilityId?: string
+  facilityId?: string,
+  db: Db = getPool()
 ): Promise<PublicScheduleItem[]> {
   const params: unknown[] = [];
   let filter = "";
@@ -234,13 +234,14 @@ export type PetugasBooking = {
  * Menyediakan rincian lengkap barang/sarana, kontak PIC, dan rundown untuk pengawasan lapangan & serah terima.
  */
 export async function getPublicPetugasBookings(
-  db: Db = query as any,
   options?: {
     facilityId?: string;
     dateFilter?: "today" | "tomorrow" | "week" | "all";
     search?: string;
+    db?: Db;
   }
 ): Promise<PetugasBooking[]> {
+  const db = options?.db ?? getPool();
   const params: unknown[] = [];
   let conditions: string[] = ["b.status = 'APPROVED'"];
 
