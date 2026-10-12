@@ -260,9 +260,16 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="mt-6 text-center">
-          <Link href="/" className="text-xs text-slate-500 hover:text-slate-800 transition">
-            ← Kembali ke Portal Publik
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3 text-xs">
+          <Link
+            href="/petugas"
+            className="font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-2xs"
+          >
+            <span>🛡️</span>
+            <span>Petugas Satpam & UB? Cek Jadwal & Rincian Barang di Sini →</span>
+          </Link>
+          <Link href="/" className="text-slate-500 hover:text-slate-800 transition py-1.5">
+            ← Kembali ke Halaman Utama
           </Link>
         </div>
       </div>

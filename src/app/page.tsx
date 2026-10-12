@@ -23,12 +23,20 @@ export default async function HomePage() {
               <p className="text-xs text-slate-500">Agenda Kegiatan Mahasiswa & Civitas Kampus</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
+            <Link
+              href="/petugas"
+              className="inline-flex items-center justify-center px-3.5 py-2 text-xs font-bold rounded-lg text-amber-950 bg-amber-400 hover:bg-amber-300 transition shadow-xs gap-1.5 border border-amber-500/40"
+              title="Portal Khusus Petugas Lapangan, Satpam, dan Unit Bisnis"
+            >
+              <span>🛡️</span>
+              <span>Portal Satpam & UB</span>
+            </Link>
             <Link
               href="/login"
-              className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition shadow-xs"
+              className="inline-flex items-center justify-center px-3.5 py-2 text-xs sm:text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition shadow-xs"
             >
-              Portal Masuk / Login Pejabat & Organisasi →
+              Portal Masuk / Login →
             </Link>
           </div>
         </div>
@@ -47,6 +55,15 @@ export default async function HomePage() {
             Forum informasi publik untuk seluruh mahasiswa. Cek agenda kegiatan, seminar, pameran, 
             dan workshop resmi yang diselenggarakan oleh UKM, HIMA, BEM, MPM, dan program studi.
           </p>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/petugas"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition"
+            >
+              <span>🛡️</span>
+              <span>Portal Lapangan Satpam & Pengelola (UB) →</span>
+            </Link>
+          </div>
         </div>
       </section>
 
