@@ -194,7 +194,6 @@ export async function seed(connectionString: string, log = console.log) {
       ],
       HIMA: [
         ["Kaprodi (atau dosen pembina sesuai ketentuan)", "PRODI_KAPRODI", null, null],
-        ["BEM", "ORGANIZATION", bem, null],
         ["MPM", "ORGANIZATION", mpm, null],
         WADIR,
       ],

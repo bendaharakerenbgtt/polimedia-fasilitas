@@ -49,8 +49,8 @@ const FLOW_TEMPLATES: FlowSection[] = [
     ],
   },
   {
-    title: "Alur 2: Peninjau Akademik",
-    subtitle: "Verifikator tingkat awal sebelum ke Subbag",
+    title: "Alur 2: Peninjau Ormawa & Akademik",
+    subtitle: "Verifikator tingkat awal & legislatif sebelum ke Subbag",
     theme: "emerald",
     accounts: [
       {
@@ -66,6 +66,13 @@ const FLOW_TEMPLATES: FlowSection[] = [
         username: "dosen.futsal",
         badge: "Pembina UKM",
         desc: "Menyetujui usulan permohonan UKM Futsal",
+      },
+      {
+        label: "MPM Polimedia",
+        role: "MPM (Legislatif)",
+        username: "mpm",
+        badge: "MPM",
+        desc: "Verifikasi izin HIMA (langsung dari Kaprodi) & UKM",
       },
     ],
   },
