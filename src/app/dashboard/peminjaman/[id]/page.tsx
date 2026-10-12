@@ -59,6 +59,7 @@ export default async function BookingDetailPage({
   ]);
 
   // Evaluasi apakah user yang sedang login berhak bertindak di tiap langkah
+  const isOwnerOrg = Boolean(user.organizationId && user.organizationId === booking.organization_id);
   const steps = await Promise.all(
     rawSteps.map(async (s) => ({
       ...s,
@@ -156,6 +157,16 @@ export default async function BookingDetailPage({
               <p className="text-[11px] text-amber-800 italic">
                 *Slot jadwal fasilitas tetap terjaga. Organisasi pemohon dapat memperbaiki data formulir dan mengirimkan ulang hasil revisi.
               </p>
+              {isOwnerOrg && (
+                <div className="pt-1.5">
+                  <Link
+                    href={`/dashboard/peminjaman/${booking.id}/edit`}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition shadow-2xs"
+                  >
+                    ✏️ Edit & Perbaiki Formulir Pengajuan →
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         )}

@@ -91,6 +91,90 @@ export async function createBookingDraftAction(prevState: any, formData: FormDat
   }
 }
 
+export async function updateBookingDraftAction(bookingId: string, prevState: any, formData: FormData) {
+  const user = await requireUser(["ORG"]);
+  const facilityId = String(formData.get("facilityId") ?? "");
+  const usageStartStr = String(formData.get("usageStart") ?? "");
+  const eventStartStr = String(formData.get("eventStart") ?? "");
+  const eventEndStr = String(formData.get("eventEnd") ?? "");
+  const usageEndStr = String(formData.get("usageEnd") ?? "");
+
+  const usageStart = parseLocalDateTime(usageStartStr);
+  const eventStart = parseLocalDateTime(eventStartStr);
+  const eventEnd = parseLocalDateTime(eventEndStr);
+  const usageEnd = parseLocalDateTime(usageEndStr);
+
+  if (!facilityId || !usageStart || !eventStart || !eventEnd || !usageEnd) {
+    return { error: "Semua data waktu dan fasilitas wajib diisi dengan benar." };
+  }
+
+  const title = String(formData.get("title") ?? "").trim();
+  const purpose = String(formData.get("purpose") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const chairName = String(formData.get("chairName") ?? "").trim();
+  const chairContact = String(formData.get("chairContact") ?? "").trim();
+  const leadName = String(formData.get("leadName") ?? "").trim();
+  const leadContact = String(formData.get("leadContact") ?? "").trim();
+  const specialNotes = String(formData.get("specialNotes") ?? "").trim();
+
+  // Parse items, committee, rundown
+  let items: any[] = [];
+  try {
+    const rawItems = formData.get("itemsJson");
+    if (rawItems) items = JSON.parse(String(rawItems));
+  } catch {}
+
+  let committee: any[] = [];
+  try {
+    const rawComm = formData.get("committeeJson");
+    if (rawComm) committee = JSON.parse(String(rawComm));
+  } catch {}
+
+  let rundown: any[] = [];
+  try {
+    const rawRun = formData.get("rundownJson");
+    if (rawRun) rundown = JSON.parse(String(rawRun));
+  } catch {}
+
+  const andSubmit = formData.get("andSubmit") === "true";
+
+  try {
+    await updateBookingDraft(user, bookingId, {
+      facilityId,
+      usageStart,
+      eventStart,
+      eventEnd,
+      usageEnd,
+      details: {
+        title,
+        purpose,
+        description,
+        chairName,
+        chairContact,
+        leadName,
+        leadContact,
+        specialNotes,
+        items,
+        committee,
+        rundown,
+      },
+    });
+
+    if (andSubmit) {
+      await submitBooking(user, bookingId);
+    }
+
+    revalidatePath(`/dashboard/peminjaman/${bookingId}`);
+    redirect(`/dashboard/peminjaman/${bookingId}`);
+  } catch (err: any) {
+    if (err?.message === "NEXT_REDIRECT") throw err;
+    if (err?.issues && Array.isArray(err.issues)) {
+      return { error: err.issues.map((i: any) => i.message).join(", ") };
+    }
+    return { error: err?.message || "Terjadi kesalahan saat memperbarui formulir." };
+  }
+}
+
 export async function submitBookingAction(bookingId: string) {
   const user = await requireUser(["ORG"]);
   try {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   submitBookingAction,
@@ -217,16 +218,24 @@ export default function BookingActionPanel({
           <div>
             <div className="text-sm font-bold text-blue-900">Formulir Masih Berstatus Draft</div>
             <p className="text-xs text-blue-700">
-              Slot masih berstatus HOLD sementara. Klik tombol kirim untuk mengunci jadwal secara definitif dan memulai alur persetujuan.
+              Slot masih berstatus HOLD sementara. Anda dapat mengedit rincian formulir atau langsung mengirimkan pengajuan untuk memulai alur persetujuan.
             </p>
           </div>
-          <button
-            onClick={() => setShowSubmitModal(true)}
-            disabled={loading}
-            className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition shadow-xs disabled:opacity-50"
-          >
-            {loading ? "Mengirim..." : "Kirim Formulir Pengajuan →"}
-          </button>
+          <div className="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+            <Link
+              href={`/dashboard/peminjaman/${booking.id}/edit`}
+              className="w-full sm:w-auto px-4 py-2.5 bg-white hover:bg-slate-50 text-blue-700 font-semibold text-xs border border-blue-300 rounded-lg transition shadow-2xs text-center inline-flex items-center justify-center gap-1.5"
+            >
+              ✏️ Edit Draft
+            </Link>
+            <button
+              onClick={() => setShowSubmitModal(true)}
+              disabled={loading}
+              className="w-full sm:w-auto px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-lg transition shadow-xs disabled:opacity-50"
+            >
+              {loading ? "Mengirim..." : "Kirim Pengajuan →"}
+            </button>
+          </div>
         </div>
       )}
 
@@ -410,19 +419,27 @@ export default function BookingActionPanel({
               Tindakan Organisasi Pemohon
             </span>
             <h4 className="text-sm font-extrabold text-slate-900 mt-0.5">
-              Kirim Ulang Setelah Memperbaiki Berkas
+              Perbaiki & Kirim Ulang Formulir Pengajuan
             </h4>
             <p className="text-xs text-slate-600 mt-1">
-              Setelah memperbaiki data proposal/kegiatan sesuai arahan peninjau di atas, klik tombol di samping untuk mengirimkan kembali hasil revisi.
+              Perbaiki data formulir peminjaman, rincian barang, rundown, atau susunan panitia sesuai catatan revisi peninjau sebelum dikirim ulang.
             </p>
           </div>
-          <button
-            onClick={handleSubmitBooking}
-            disabled={loading}
-            className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-xs disabled:opacity-50 shrink-0 cursor-pointer"
-          >
-            {loading ? "Mengirim..." : "Kirim Ulang Hasil Revisi →"}
-          </button>
+          <div className="flex items-center gap-2.5 shrink-0">
+            <Link
+              href={`/dashboard/peminjaman/${booking.id}/edit`}
+              className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition shadow-xs inline-flex items-center gap-1.5"
+            >
+              ✏️ Edit Formulir
+            </Link>
+            <button
+              onClick={handleSubmitBooking}
+              disabled={loading}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-xs disabled:opacity-50 cursor-pointer"
+            >
+              {loading ? "Mengirim..." : "Kirim Ulang →"}
+            </button>
+          </div>
         </div>
       )}
 

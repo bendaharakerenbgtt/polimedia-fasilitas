@@ -2,8 +2,8 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { createBookingDraftAction } from "@/app/actions/bookings";
-import { fmtDateTime, fmtRange, fmtTime, isWithinOperationalHours, OPERATIONAL_START_TIME, OPERATIONAL_END_TIME } from "@/lib/time";
+import { createBookingDraftAction, updateBookingDraftAction } from "@/app/actions/bookings";
+import { fmtDateTime, fmtRange, fmtTime, toLocalInput, isWithinOperationalHours, OPERATIONAL_START_TIME, OPERATIONAL_END_TIME } from "@/lib/time";
 import type { BookedSlotInfo } from "@/server/bookings";
 
 interface InventoryItemState {
@@ -29,38 +29,52 @@ export default function NewBookingForm({
   bookedSlots = [],
   standardItems = [],
   facilityItemsMap = {},
+  initialBooking,
+  initialItems = [],
+  mode = "create",
 }: {
   facilities: { id: string; name: string; category: string; location: string; code: string }[];
   bookedSlots?: BookedSlotInfo[];
   standardItems?: string[];
   facilityItemsMap?: Record<string, { name: string; quantity: number }[]>;
+  initialBooking?: any;
+  initialItems?: { name: string; quantity: number; notes?: string }[];
+  mode?: "create" | "edit";
 }) {
-  const [state, formAction, isPending] = useActionState(createBookingDraftAction, null);
+  const formActionFn = mode === "edit" && initialBooking
+    ? updateBookingDraftAction.bind(null, initialBooking.id)
+    : createBookingDraftAction;
+  const [state, formAction, isPending] = useActionState(formActionFn, null);
 
   // STEP STATE: 1 | 2 | 3
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // TAHAP 1: FASILITAS & WAKTU
-  const [facilityId, setFacilityId] = useState("");
-  const [usageStart, setUsageStart] = useState("");
-  const [eventStart, setEventStart] = useState("");
-  const [eventEnd, setEventEnd] = useState("");
-  const [usageEnd, setUsageEnd] = useState("");
+  const [facilityId, setFacilityId] = useState(initialBooking?.facility_id ?? "");
+  const [usageStart, setUsageStart] = useState(initialBooking ? toLocalInput(initialBooking.usage_start) : "");
+  const [eventStart, setEventStart] = useState(initialBooking ? toLocalInput(initialBooking.event_start) : "");
+  const [eventEnd, setEventEnd] = useState(initialBooking ? toLocalInput(initialBooking.event_end) : "");
+  const [usageEnd, setUsageEnd] = useState(initialBooking ? toLocalInput(initialBooking.usage_end) : "");
   const [shortcutDate, setShortcutDate] = useState("");
   const [shortcutTimeSlot, setShortcutTimeSlot] = useState("");
 
   // TAHAP 2: INFORMASI, DESKRIPSI, BARANG, PANITIA & RUNDOWN
-  const [title, setTitle] = useState("");
-  const [purpose, setPurpose] = useState("");
-  const [description, setDescription] = useState("");
+  const [title, setTitle] = useState(initialBooking?.title ?? "");
+  const [purpose, setPurpose] = useState(initialBooking?.purpose ?? "");
+  const [description, setDescription] = useState(initialBooking?.description ?? "");
 
   // Inisialisasi daftar barang bawaan dari facilityItemsMap jika ada, atau standardItems
   const [inventoryItems, setInventoryItems] = useState<InventoryItemState[]>(() => {
-    return standardItems.map((name) => ({
-      name,
-      quantity: 0,
-      notes: "",
-    }));
+    const fId = initialBooking?.facility_id;
+    const baseList = (fId && facilityItemsMap[fId]) || standardItems.map((name) => ({ name, quantity: 0 }));
+    return baseList.map((it: any) => {
+      const existing = initialItems.find((x) => x.name === it.name);
+      return {
+        name: it.name,
+        quantity: existing ? existing.quantity : 0,
+        notes: existing?.notes || "",
+      };
+    });
   });
 
   // Handler pergantian fasilitas: otomatis sesuaikan daftar barang sesuai fasilitas yang dipilih
@@ -69,41 +83,53 @@ export default function NewBookingForm({
     const facilitySpecificItems = facilityItemsMap[newFacilityId];
     if (facilitySpecificItems && facilitySpecificItems.length > 0) {
       setInventoryItems(
-        facilitySpecificItems.map((it) => ({
-          name: it.name,
-          quantity: 0,
-          notes: "",
-        }))
+        facilitySpecificItems.map((it) => {
+          const existing = initialItems.find((x) => x.name === it.name);
+          return {
+            name: it.name,
+            quantity: existing ? existing.quantity : 0,
+            notes: existing?.notes || "",
+          };
+        })
       );
     } else {
       setInventoryItems(
-        standardItems.map((name) => ({
-          name,
-          quantity: 0,
-          notes: "",
-        }))
+        standardItems.map((name) => {
+          const existing = initialItems.find((x) => x.name === name);
+          return {
+            name,
+            quantity: existing ? existing.quantity : 0,
+            notes: existing?.notes || "",
+          };
+        })
       );
     }
   }
 
   // Panitia (Nama lengkap, NIM, Program Studi)
-  const [committee, setCommittee] = useState<CommitteeMemberState[]>([
-    { name: "", nim: "", prodi: "" },
-  ]);
+  const [committee, setCommittee] = useState<CommitteeMemberState[]>(() => {
+    if (Array.isArray(initialBooking?.committee) && initialBooking.committee.length > 0) {
+      return initialBooking.committee;
+    }
+    return [{ name: "", nim: "", prodi: "" }];
+  });
 
   // Rundown (Nama kegiatan / Agenda, Waktu, Penanggung Jawab)
-  const [rundown, setRundown] = useState<RundownItemState[]>([
-    { agenda: "", time: "", pic: "" },
-  ]);
+  const [rundown, setRundown] = useState<RundownItemState[]>(() => {
+    if (Array.isArray(initialBooking?.rundown) && initialBooking.rundown.length > 0) {
+      return initialBooking.rundown;
+    }
+    return [{ agenda: "", time: "", pic: "" }];
+  });
 
   // TAHAP 3: PENANGGUNG JAWAB KEGIATAN (WAJIB KONTAK)
-  const [leadName, setLeadName] = useState("");
-  const [leadContact, setLeadContact] = useState("");
-  const [chairName, setChairName] = useState("");
-  const [chairContact, setChairContact] = useState("");
+  const [leadName, setLeadName] = useState(initialBooking?.lead_name ?? "");
+  const [leadContact, setLeadContact] = useState(initialBooking?.lead_contact ?? "");
+  const [chairName, setChairName] = useState(initialBooking?.chair_name ?? "");
+  const [chairContact, setChairContact] = useState(initialBooking?.chair_contact ?? "");
 
-  // Hitung tanggal minimal peminjaman (H-3 dari hari ini)
-  const minDate = (() => {
+  // Hitung tanggal minimal peminjaman (H-3 dari hari ini jika baru, bebas jika mengedit data yang sudah ada)
+  const minDate = mode === "edit" ? undefined : (() => {
     const d = new Date();
     d.setDate(d.getDate() + 3);
     const yyyy = d.getFullYear();
@@ -211,7 +237,7 @@ export default function NewBookingForm({
         return;
       }
       const minLeadTimeMs = 3 * 24 * 60 * 60 * 1000;
-      if (new Date(usageStart).getTime() - Date.now() < minLeadTimeMs) {
+      if (mode !== "edit" && new Date(usageStart).getTime() - Date.now() < minLeadTimeMs) {
         alert("Peminjaman fasilitas harus diajukan minimal 3 hari (H-3) sebelum kegiatan dimulai.");
         return;
       }
@@ -234,23 +260,51 @@ export default function NewBookingForm({
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Banner Khusus Mode Edit / Revisi */}
+      {mode === "edit" && (
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 shadow-xs space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">✏️</span>
+              <h3 className="font-extrabold text-amber-950 text-base">
+                Mode Perbaikan / Revisi Formulir Pengajuan ({initialBooking?.code})
+              </h3>
+            </div>
+            <span className="text-xs font-bold px-3 py-1 bg-amber-200 text-amber-900 rounded-lg">
+              Status: {initialBooking?.status === "REVISION" ? "Perlu Revisi" : initialBooking?.status}
+            </span>
+          </div>
+          {initialBooking?.decision_note && (
+            <div className="bg-white rounded-xl p-3.5 border border-amber-200 text-xs text-amber-950 space-y-1">
+              <strong className="text-amber-900 block font-bold">Catatan Arahan Revisi dari Peninjau:</strong>
+              <p className="whitespace-pre-line text-slate-800 font-medium">{initialBooking.decision_note}</p>
+            </div>
+          )}
+          <p className="text-xs text-amber-800">
+            Perbarui data kegiatan, susunan panitia, rundown acara, sarana barang fasilitas, atau jam kegiatan sesuai arahan di atas.
+          </p>
+        </div>
+      )}
+
       {/* Top Header & Breadcrumb */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Link
-              href="/dashboard"
+              href={mode === "edit" && initialBooking ? `/dashboard/peminjaman/${initialBooking.id}` : "/dashboard"}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition shadow-2xs"
             >
               <span>←</span>
-              <span>Kembali ke Dashboard</span>
+              <span>{mode === "edit" ? "Batal & Kembali ke Detail Pengajuan" : "Kembali ke Dashboard"}</span>
             </Link>
           </div>
           <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-            Formulir Pengajuan Peminjaman Fasilitas
+            {mode === "edit" ? "Perbarui / Edit Formulir Pengajuan" : "Formulir Pengajuan Peminjaman Fasilitas"}
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Pengajuan dibagi menjadi 3 tahapan sistematis. Slot akan otomatis ditahan (HOLD) selama 1 jam saat draft berhasil disimpan.
+            {mode === "edit"
+              ? "Ubah data pengajuan Anda lalu simpan perubahan atau langsung kirimkan kembali hasil revisi."
+              : "Pengajuan dibagi menjadi 3 tahapan sistematis. Slot akan otomatis ditahan (HOLD) selama 1 jam saat draft berhasil disimpan."}
           </p>
         </div>
       </div>
@@ -1022,12 +1076,14 @@ export default function NewBookingForm({
                 <span>Konfirmasi Akhir Peminjaman:</span>
               </div>
               <p className="text-[11px] leading-relaxed">
-                Setelah tombol <strong>"Simpan Draft & Kunci Slot"</strong> ditekan, jadwal peminjaman fasilitas Anda akan langsung ditahan sementara (HOLD) selama 60 menit. Anda dapat memeriksa pratinjau formulir sebelum mengirimkannya ke alur persetujuan pejabat kampus.
+                {mode === "edit"
+                  ? "Anda dapat menyimpan perubahan formulir untuk diteliti lagi, atau langsung mengirimkan kembali hasil revisi agar alur persetujuan pejabat kampus berlanjut."
+                  : 'Setelah tombol "Simpan Draft & Kunci Slot" ditekan, jadwal peminjaman fasilitas Anda akan langsung ditahan sementara (HOLD) selama 60 menit. Anda dapat memeriksa pratinjau formulir sebelum mengirimkannya ke alur persetujuan pejabat kampus.'}
               </p>
             </div>
 
             {/* Navigasi Tahap 3 */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={() => setStep(2)}
@@ -1036,13 +1092,36 @@ export default function NewBookingForm({
                 ← Kembali ke Tahap 2
               </button>
 
-              <button
-                type="submit"
-                disabled={isPending}
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition shadow-xs disabled:opacity-50 cursor-pointer flex items-center gap-2"
-              >
-                {isPending ? "Menyimpan & Menahan Slot..." : "Simpan Draft & Kunci Slot →"}
-              </button>
+              {mode === "edit" ? (
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="submit"
+                    name="andSubmit"
+                    value="false"
+                    disabled={isPending}
+                    className="px-4 py-2.5 rounded-xl border border-blue-600 text-blue-700 bg-white hover:bg-blue-50 text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer"
+                  >
+                    {isPending ? "Menyimpan..." : "Simpan Perubahan Formulir"}
+                  </button>
+                  <button
+                    type="submit"
+                    name="andSubmit"
+                    value="true"
+                    disabled={isPending}
+                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-xs disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  >
+                    {isPending ? "Menyimpan & Mengirim..." : "Simpan & Kirim Ulang Hasil Revisi →"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition shadow-xs disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                >
+                  {isPending ? "Menyimpan & Menahan Slot..." : "Simpan Draft & Kunci Slot →"}
+                </button>
+              )}
             </div>
           </div>
         )}
