@@ -4,6 +4,8 @@ import { useActionState, useState, useRef } from "react";
 import Link from "next/link";
 import { loginAction } from "@/app/actions/auth";
 
+export const dynamic = "force-dynamic";
+
 interface FlowAccount {
   label: string;
   role: string;
