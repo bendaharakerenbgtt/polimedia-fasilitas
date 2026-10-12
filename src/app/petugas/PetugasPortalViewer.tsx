@@ -151,30 +151,30 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans print:bg-white print:text-black">
       {/* Header Khusus Satpam & Pengelola */}
-      <header className="bg-slate-900 text-white sticky top-0 z-30 shadow-md border-b border-slate-800 print:relative print:bg-white print:text-black print:border-b-2 print:border-black">
+      <header className="bg-slate-900 text-white sticky top-0 z-30 shadow-xs border-b border-slate-800 print:relative print:bg-white print:text-black print:border-b-2 print:border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center space-x-3 w-full sm:w-auto">
-            <div className="w-11 h-11 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-extrabold text-xl shadow-xs shrink-0 print:border print:border-black">
-              🛡️
+            <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 text-white flex items-center justify-center font-bold text-xs shrink-0 print:border-black">
+              POS
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-bold leading-tight tracking-tight">
+                <h1 className="text-base sm:text-lg font-bold leading-tight tracking-tight text-white">
                   Portal Petugas: Satpam & Tim Kebersihan (OB)
                 </h1>
-                <span className="hidden sm:inline-block px-2 py-0.5 bg-amber-400/20 text-amber-300 text-[10px] font-bold rounded-md border border-amber-400/30 uppercase tracking-wider print:hidden">
-                  Pengawasan Lapangan
+                <span className="hidden sm:inline-block px-2 py-0.5 bg-slate-800 text-slate-300 text-[10px] font-semibold rounded border border-slate-700 uppercase tracking-wider print:hidden">
+                  Operasional Lapangan
                 </span>
               </div>
               <p className="text-xs text-slate-400 print:text-slate-600">
-                PoliMedia • Jadwal Fasilitas Resmi, Kunci Ruangan, & Checklist Barang Inventaris
+                PoliMedia Jakarta • Jadwal Fasilitas Resmi, Kunci Ruangan, & Checklist Barang Inventaris
               </p>
             </div>
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
             <div className="text-right">
-              <span className="text-[11px] font-mono text-amber-400 font-bold block print:text-black">
+              <span className="text-[11px] font-mono text-slate-300 font-bold block print:text-black">
                 {currentTime || "Memuat waktu..."}
               </span>
               <span className="text-[10px] text-slate-400 hidden sm:block print:hidden">
@@ -184,27 +184,27 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
 
             <Link
               href="/"
-              className="text-xs text-slate-300 hover:text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 print:hidden transition"
+              className="text-xs text-slate-300 hover:text-white bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700 print:hidden transition"
             >
-              Beranda →
+              Kembali ke Beranda
             </Link>
           </div>
         </div>
       </header>
 
       {/* Info Petugas Banner */}
-      <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2.5 print:hidden">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs text-amber-900">
+      <div className="bg-slate-50 border-b border-slate-200 px-4 py-2.5 print:hidden">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs text-slate-700">
           <div className="flex items-center gap-2">
-            <span className="font-bold bg-amber-500 text-slate-950 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide">
+            <span className="font-bold bg-slate-200 text-slate-800 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide">
               Instruksi Petugas
             </span>
             <span>
               Cocokkan izin kode peminjaman, pastikan jam buka-tutup ruangan sesuai jadwal penggunaan, dan lakukan checklist fisik sarana barang sebelum serta sesudah acara.
             </span>
           </div>
-          <div className="text-[11px] text-amber-800 shrink-0 font-medium">
-            *Hanya menampilkan kegiatan yang telah disetujui resmi (APPROVED)
+          <div className="text-[11px] text-slate-500 shrink-0 font-medium">
+            Hanya menampilkan kegiatan yang telah disetujui resmi (APPROVED)
           </div>
         </div>
       </div>
@@ -212,35 +212,35 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
         {/* Controls Bar: Filter & Pencarian */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3.5 print:hidden">
+        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3 print:hidden">
           <div className="flex flex-wrap items-center justify-between gap-3">
             {/* Tab Filter Tanggal */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+            <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
               <button
                 onClick={() => setDateFilter("today")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                className={`px-3 py-1.5 rounded-md font-bold transition ${
                   dateFilter === "today"
-                    ? "bg-white text-blue-700 shadow-2xs"
+                    ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                🔴 Hari Ini
+                Hari Ini
               </button>
               <button
                 onClick={() => setDateFilter("tomorrow")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                className={`px-3 py-1.5 rounded-md font-bold transition ${
                   dateFilter === "tomorrow"
-                    ? "bg-white text-blue-700 shadow-2xs"
+                    ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                🟡 Besok
+                Besok
               </button>
               <button
                 onClick={() => setDateFilter("week")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                className={`px-3 py-1.5 rounded-md font-bold transition ${
                   dateFilter === "week"
-                    ? "bg-white text-blue-700 shadow-2xs"
+                    ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -248,9 +248,9 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
               </button>
               <button
                 onClick={() => setDateFilter("all")}
-                className={`px-3 py-1.5 rounded-lg font-bold transition ${
+                className={`px-3 py-1.5 rounded-md font-bold transition ${
                   dateFilter === "all"
-                    ? "bg-white text-blue-700 shadow-2xs"
+                    ? "bg-white text-slate-900 shadow-2xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -260,11 +260,11 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
 
             {/* Filter Fasilitas */}
             <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-slate-500 hidden sm:inline">Lokasi:</label>
+              <label className="text-xs font-semibold text-slate-600 hidden sm:inline">Lokasi:</label>
               <select
                 value={selectedFacility}
                 onChange={(e) => setSelectedFacility(e.target.value)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-2 focus:ring-blue-500"
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-300 bg-white font-medium text-slate-800 focus:ring-1 focus:ring-slate-500"
               >
                 <option value="ALL">Semua Fasilitas / Ruangan</option>
                 {facilities.map((f) => (
@@ -282,16 +282,15 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Cari kode (PJM-...), nama acara, ormawa, ruangan, atau nama Ketua Pelaksana/PIC..."
-              className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-xl text-xs sm:text-sm bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Cari kode (PJM-...), nama acara, ormawa, ruangan, atau nama PIC..."
+              className="w-full pl-3.5 pr-16 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm bg-white text-slate-900 placeholder:text-slate-400 focus:ring-1 focus:ring-slate-500 focus:border-slate-500"
             />
-            <span className="absolute left-3 top-2.5 text-slate-400 text-sm">🔍</span>
             {search && (
               <button
                 onClick={() => setSearch("")}
-                className="absolute right-3 top-2 text-xs text-slate-400 hover:text-slate-600"
+                className="absolute right-3 top-2 text-xs font-medium text-slate-500 hover:text-slate-800"
               >
-                ✕ Hapus
+                Reset
               </button>
             )}
           </div>
@@ -300,7 +299,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
         {/* Ringkasan Jumlah */}
         <div className="flex items-center justify-between text-xs text-slate-500 px-1">
           <span>
-            Menampilkan <strong>{filteredBookings.length}</strong> kegiatan resmi yang membutuhkan pengawasan
+            Menampilkan <strong>{filteredBookings.length}</strong> kegiatan resmi
           </span>
           <span className="font-semibold text-slate-600">
             {dateFilter === "today"
@@ -315,13 +314,12 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
 
         {/* Daftar Kegiatan */}
         {filteredBookings.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500 shadow-xs space-y-3">
-            <span className="text-4xl block">🛡️</span>
-            <p className="text-base font-bold text-slate-800">
-              Tidak Ada Jadwal Kegiatan {dateFilter === "today" ? "Hari Ini" : "yang Cocok"}
+          <div className="bg-white border border-slate-200 rounded-xl p-10 text-center text-slate-500 shadow-2xs space-y-2.5">
+            <p className="text-sm font-bold text-slate-800">
+              Tidak ada jadwal kegiatan {dateFilter === "today" ? "hari ini" : "yang cocok"}
             </p>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Tidak ada kegiatan yang disetujui untuk filter yang dipilih. Coba ganti tab ke &quot;Besok&quot; atau &quot;Semua Jadwal&quot;.
+              Tidak ada kegiatan yang disetujui untuk filter yang dipilih. Silakan pilih tab tanggal lain.
             </p>
             <button
               onClick={() => {
@@ -329,9 +327,9 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                 setSelectedFacility("ALL");
                 setSearch("");
               }}
-              className="text-xs font-semibold text-blue-600 hover:underline pt-2 inline-block"
+              className="text-xs font-semibold text-blue-600 hover:underline pt-1 inline-block"
             >
-              Tampilkan Semua Jadwal Kegiatan →
+              Tampilkan Semua Jadwal Kegiatan
             </button>
           </div>
         ) : (
@@ -351,20 +349,20 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                   {/* Baris Atas: Kode, Status & Ormawa */}
                   <div className="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 pb-3.5">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-extrabold bg-slate-900 text-white px-2.5 py-1 rounded-md print:border print:border-black print:text-black print:bg-white">
+                      <span className="font-mono text-xs font-bold bg-slate-900 text-white px-2.5 py-1 rounded-md print:border print:border-black print:text-black print:bg-white">
                         {b.code}
                       </span>
                       <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md ${status.bg} print:text-black print:bg-white print:border print:border-black`}>
                         {status.label}
                       </span>
-                      <span className="text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-md print:border-black">
+                      <span className="text-xs font-bold text-slate-800 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md print:border-black">
                         {b.orgName} ({b.orgType})
                       </span>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold">
-                        ✓ Izin Resmi Disahkan Pimpinan
+                      <span className="text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold">
+                        Izin Resmi Disahkan Pimpinan
                       </span>
                     </div>
                   </div>
@@ -372,7 +370,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                   {/* Judul Kegiatan & Lokasi */}
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <div className="lg:col-span-2 space-y-1.5">
-                      <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 leading-snug">
+                      <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug">
                         {b.title}
                       </h3>
                       {b.purpose && (
@@ -381,8 +379,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                         </p>
                       )}
                       <div className="flex items-center gap-2 text-xs text-slate-700 font-medium pt-1">
-                        <span className="text-sm">📍</span>
-                        <strong className="text-slate-900 text-sm">{b.facilityName}</strong>
+                        <strong className="text-slate-900">{b.facilityName}</strong>
                         {b.facilityLocation && (
                           <span className="text-slate-500">({b.facilityLocation})</span>
                         )}
@@ -392,7 +389,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                     {/* Kontak PIC Lapangan */}
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2 text-xs">
                       <span className="font-bold text-slate-800 block text-[11px] uppercase tracking-wider">
-                        📞 Kontak PIC & Koordinasi Satpam:
+                        Kontak PIC & Koordinasi Satpam:
                       </span>
                       <div className="space-y-1">
                         <div>
@@ -405,9 +402,9 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                                 href={`https://wa.me/${b.leadContact.replace(/[^0-9]/g, "")}`}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[10px] font-bold transition print:hidden"
+                                className="px-2 py-0.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded text-[10px] font-bold transition print:hidden"
                               >
-                                Chat WA 💬
+                                Chat WhatsApp
                               </a>
                             </div>
                           )}
@@ -427,24 +424,22 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                   </div>
 
                   {/* Kotak Jam Operasional Buka-Tutup Ruangan */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-blue-50/70 border border-blue-200 rounded-xl p-3.5 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs">
                     <div>
-                      <span className="text-[11px] font-bold text-blue-900 flex items-center gap-1">
-                        <span>🔑</span>
-                        <span>WAKTU PENGGUNAAN RUANGAN (BUKA & KUNCI PINTU):</span>
+                      <span className="text-[11px] font-bold text-slate-800 block">
+                        WAKTU PENGGUNAAN RUANGAN (BUKA & KUNCI PINTU):
                       </span>
-                      <span className="font-extrabold text-blue-950 text-sm block mt-0.5 font-mono">
+                      <span className="font-extrabold text-slate-900 text-sm block mt-0.5 font-mono">
                         {fmtTimeRange(b.usageStart, b.usageEnd)}
                       </span>
-                      <span className="text-[10px] text-blue-700 block mt-0.5">
+                      <span className="text-[10px] text-slate-500 block mt-0.5">
                         *Satpam membuka ruangan saat jam mulai dan mengunci kembali setelah jam selesai.
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                        <span>⏱️</span>
-                        <span>WAKTU PELAKSANAAN ACARA INTI (PUBLIK):</span>
+                      <span className="text-[11px] font-bold text-slate-800 block">
+                        WAKTU PELAKSANAAN ACARA INTI (PUBLIK):
                       </span>
                       <span className="font-bold text-slate-900 text-sm block mt-0.5 font-mono">
                         {fmtTimeRange(b.eventStart, b.eventEnd)}
@@ -458,12 +453,9 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                   {/* KOTAK CHECKLIST INVENTARIS BARANG FASILITAS */}
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
                     <div className="flex items-center justify-between border-b border-slate-200/80 pb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-base">📦</span>
-                        <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm uppercase tracking-wide">
-                          Checklist Sarana Barang yang Dipinjam ({b.items.length} Jenis Sarana)
-                        </h4>
-                      </div>
+                      <h4 className="font-bold text-slate-900 text-xs sm:text-sm uppercase tracking-wide">
+                        Checklist Sarana Barang yang Dipinjam ({b.items.length} Jenis Sarana)
+                      </h4>
                       <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
                         Centang fisik untuk serah terima barang
                       </span>
@@ -489,7 +481,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-bold text-xs truncate">{item.name}</span>
                                 </div>
-                                <div className="text-[11px] text-blue-700 font-extrabold">
+                                <div className="text-[11px] text-slate-700 font-bold">
                                   {item.quantity} Unit
                                 </div>
                                 {item.notes && (
@@ -535,7 +527,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                       onClick={() => setExpandedBooking(isExpanded ? null : b.id)}
                       className="text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1.5 transition py-1"
                     >
-                      <span>{isExpanded ? "▲ Sembunyikan" : "▼ Lihat"} Rundown Acara & Daftar Panitia</span>
+                      <span>{isExpanded ? "Sembunyikan" : "Lihat"} Rundown Acara & Daftar Panitia</span>
                     </button>
 
                     <div className="text-[11px] text-slate-400">
@@ -548,9 +540,8 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
                     <div className="pt-3 border-t border-slate-200 space-y-4 animate-in fade-in duration-200">
                       {/* Rundown Acara */}
                       <div>
-                        <h5 className="font-bold text-slate-800 text-xs mb-2 flex items-center gap-1">
-                          <span>⏱️</span>
-                          <span>Susunan Rundown Acara ({b.rundown.length} Sesi):</span>
+                        <h5 className="font-bold text-slate-800 text-xs mb-2">
+                          Susunan Rundown Acara ({b.rundown.length} Sesi):
                         </h5>
                         {hasRundown ? (
                           <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -574,19 +565,18 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
 
                       {/* Panitia Pelaksana */}
                       <div>
-                        <h5 className="font-bold text-slate-800 text-xs mb-2 flex items-center gap-1">
-                          <span>👥</span>
-                          <span>Panitia Pelaksana yang Berhak di Lokasi ({b.committee.length} Orang):</span>
+                        <h5 className="font-bold text-slate-800 text-xs mb-2">
+                          Panitia Pelaksana yang Berhak di Lokasi ({b.committee.length} Orang):
                         </h5>
                         {hasCommittee ? (
                           <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
                             {b.committee.map((c, idx) => (
                               <span
                                 key={idx}
-                                className="bg-emerald-50 border border-emerald-200 text-emerald-900 px-2 py-0.5 rounded text-[11px]"
+                                className="bg-slate-100 border border-slate-200 text-slate-800 px-2 py-0.5 rounded text-[11px]"
                               >
                                 <strong>{c.name}</strong>
-                                {c.nim && <span className="font-mono text-emerald-700"> ({c.nim})</span>}
+                                {c.nim && <span className="font-mono text-slate-600"> ({c.nim})</span>}
                                 {c.prodi && <span> • {c.prodi}</span>}
                               </span>
                             ))}

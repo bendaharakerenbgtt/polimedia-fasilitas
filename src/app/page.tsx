@@ -26,10 +26,9 @@ export default async function HomePage() {
           <div className="flex items-center space-x-2.5">
             <Link
               href="/petugas"
-              className="inline-flex items-center justify-center px-3.5 py-2 text-xs font-bold rounded-lg text-amber-950 bg-amber-400 hover:bg-amber-300 transition shadow-xs gap-1.5 border border-amber-500/40"
+              className="inline-flex items-center justify-center px-3.5 py-2 text-xs font-semibold rounded-lg text-slate-800 bg-white hover:bg-slate-100 transition shadow-2xs border border-slate-300"
               title="Portal Khusus Petugas Lapangan, Satpam, dan Tim Kebersihan (OB)"
             >
-              <span>🛡️</span>
               <span>Portal Satpam & OB</span>
             </Link>
             <Link
@@ -58,10 +57,9 @@ export default async function HomePage() {
           <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/petugas"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition"
+              className="inline-flex items-center px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs rounded-xl shadow-xs border border-slate-700 transition"
             >
-              <span>🛡️</span>
-              <span>Portal Lapangan Satpam & Petugas Kebersihan (OB) →</span>
+              <span>Portal Lapangan Satpam & Tim Kebersihan (OB) →</span>
             </Link>
           </div>
         </div>
