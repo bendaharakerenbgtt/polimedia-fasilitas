@@ -155,18 +155,8 @@ export default async function BookingDetailPage({
                 <strong>Catatan / Arahan Revisi Peninjau:</strong> {booking.decision_note || "Silakan perbaiki data penyampaian proposal sesuai arahan peninjau."}
               </p>
               <p className="text-[11px] text-amber-800 italic">
-                *Slot jadwal fasilitas tetap terjaga. Organisasi pemohon dapat memperbaiki data formulir dan mengirimkan ulang hasil revisi.
+                *Slot jadwal fasilitas tetap terjaga. Organisasi pemohon dapat memperbaiki data formulir dan mengirimkan ulang hasil revisi pada panel tindakan di bawah.
               </p>
-              {isOwnerOrg && (
-                <div className="pt-1.5">
-                  <Link
-                    href={`/dashboard/peminjaman/${booking.id}/edit`}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition shadow-2xs"
-                  >
-                    ✏️ Edit & Perbaiki Formulir Pengajuan →
-                  </Link>
-                </div>
-              )}
             </div>
           </div>
         )}
