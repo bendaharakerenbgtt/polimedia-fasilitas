@@ -27,10 +27,10 @@ export default async function HomePage() {
             <Link
               href="/petugas"
               className="inline-flex items-center justify-center px-3.5 py-2 text-xs font-bold rounded-lg text-amber-950 bg-amber-400 hover:bg-amber-300 transition shadow-xs gap-1.5 border border-amber-500/40"
-              title="Portal Khusus Petugas Lapangan, Satpam, dan Unit Bisnis"
+              title="Portal Khusus Petugas Lapangan, Satpam, dan Tim Kebersihan (OB)"
             >
               <span>🛡️</span>
-              <span>Portal Satpam & UB</span>
+              <span>Portal Satpam & OB</span>
             </Link>
             <Link
               href="/login"
@@ -61,7 +61,7 @@ export default async function HomePage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition"
             >
               <span>🛡️</span>
-              <span>Portal Lapangan Satpam & Pengelola (UB) →</span>
+              <span>Portal Lapangan Satpam & Petugas Kebersihan (OB) →</span>
             </Link>
           </div>
         </div>

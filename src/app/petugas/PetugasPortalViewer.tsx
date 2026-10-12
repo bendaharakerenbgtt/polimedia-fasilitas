@@ -148,10 +148,6 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
     });
   }, [initialBookings, dateFilter, selectedFacility, search]);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className="min-h-screen bg-slate-100 text-slate-800 flex flex-col font-sans print:bg-white print:text-black">
       {/* Header Khusus Satpam & Pengelola */}
@@ -164,7 +160,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-bold leading-tight tracking-tight">
-                  Portal Petugas: Satpam & Unit Bisnis (UB)
+                  Portal Petugas: Satpam & Tim Kebersihan (OB)
                 </h1>
                 <span className="hidden sm:inline-block px-2 py-0.5 bg-amber-400/20 text-amber-300 text-[10px] font-bold rounded-md border border-amber-400/30 uppercase tracking-wider print:hidden">
                   Pengawasan Lapangan
@@ -186,18 +182,9 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
               </span>
             </div>
 
-            <button
-              onClick={handlePrint}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition print:hidden shadow-2xs"
-              title="Cetak lembar pengawasan"
-            >
-              <span>🖨️</span>
-              <span className="hidden md:inline">Cetak Lembar</span>
-            </button>
-
             <Link
               href="/"
-              className="text-xs text-slate-300 hover:text-white bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700 print:hidden transition"
+              className="text-xs text-slate-300 hover:text-white bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 print:hidden transition"
             >
               Beranda →
             </Link>
@@ -530,7 +517,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
 
                     <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                       <span>
-                        *Centang di layar tersimpan di perangkat ini untuk membantu pengecekan Satpam/UB posko.
+                        *Centang di layar tersimpan di perangkat ini untuk membantu pengecekan Satpam/OB posko.
                       </span>
                       {hasItems && (
                         <span className="font-bold text-slate-700">
@@ -619,7 +606,7 @@ export function PetugasPortalViewer({ initialBookings, facilities }: Props) {
 
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 print:hidden">
-        <p>© 2026 Politeknik Negeri Media Kreatif (PoliMedia) • Portal Operasional Lapangan Satpam & Unit Bisnis (UB)</p>
+        <p>© 2026 Politeknik Negeri Media Kreatif (PoliMedia) • Portal Operasional Lapangan Satpam & Tim Kebersihan (OB)</p>
       </footer>
     </div>
   );

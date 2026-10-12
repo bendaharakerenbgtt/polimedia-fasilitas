@@ -230,7 +230,7 @@ export type PetugasBooking = {
 };
 
 /**
- * Mengambil data kegiatan resmi yang telah disetujui (APPROVED) untuk portal operasional Satpam & Unit Bisnis (UB).
+ * Mengambil data kegiatan resmi yang telah disetujui (APPROVED) untuk portal operasional Satpam & Tim Kebersihan (OB).
  * Menyediakan rincian lengkap barang/sarana, kontak PIC, dan rundown untuk pengawasan lapangan & serah terima.
  */
 export async function getPublicPetugasBookings(

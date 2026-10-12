@@ -266,7 +266,7 @@ export default function LoginPage() {
             className="font-bold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-2xs"
           >
             <span>🛡️</span>
-            <span>Petugas Satpam & UB? Cek Jadwal & Rincian Barang di Sini →</span>
+            <span>Petugas Satpam & OB? Cek Jadwal & Rincian Barang di Sini →</span>
           </Link>
           <Link href="/" className="text-slate-500 hover:text-slate-800 transition py-1.5">
             ← Kembali ke Halaman Utama
