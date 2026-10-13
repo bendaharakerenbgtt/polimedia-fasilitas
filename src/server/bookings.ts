@@ -325,7 +325,7 @@ export async function submitBooking(actor: Actor, bookingId: string) {
           client,
           reviewers,
           "Hasil Revisi Pengajuan Dikirim",
-          `${b.code} (${b.title}) telah diperbaiki oleh pemohon dan siap ditinjau kembali pada tahap "${activeStep.label}".`,
+          `Pengajuan "${b.title}" telah diperbaiki oleh pemohon dan siap ditinjau kembali pada tahap "${activeStep.label}".`,
           `/dashboard/peminjaman/${b.id}`
         );
       }
@@ -433,7 +433,7 @@ export async function withdrawPendingBooking(actor: Actor, bookingId: string, re
         client,
         Array.from(targetUserIds),
         "Pengajuan Peminjaman Dibatalkan/Ditarik",
-        `${b.code} (${b.title}) telah ditarik oleh pemohon. Alasan: ${reason ?? "Ditarik oleh organisasi pemohon."}`,
+        `Pengajuan "${b.title}" telah ditarik oleh pemohon. Alasan: ${reason ?? "Ditarik oleh organisasi pemohon."}`,
         `/dashboard/peminjaman/${b.id}`
       );
     }

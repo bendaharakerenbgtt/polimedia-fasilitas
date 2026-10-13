@@ -110,7 +110,7 @@ export async function instantiateSteps(client: PoolClient, booking: BookingRow) 
     client,
     await stepResolverUserIds(client, first, booking.organization_id),
     "Pengajuan menunggu tindakan Anda",
-    `${booking.code} — ${booking.title}`,
+    booking.title,
     `/dashboard/peminjaman/${booking.id}`,
   );
 }
@@ -183,7 +183,7 @@ export async function actOnBooking(actor: Actor, bookingId: string, action: Step
         client,
         orgUsers,
         "Pengajuan Memerlukan Revisi",
-        `${b.code} — ${b.title} dikembalikan oleh ${reviewerName} untuk revisi. Catatan: ${note || "Periksa arahan dan perbaiki berkas proposal."}`,
+        `Pengajuan "${b.title}" dikembalikan oleh ${reviewerName} untuk revisi. Catatan: ${note || "Periksa arahan dan perbaiki berkas proposal."}`,
         link
       );
       return { status: "REVISION" as const };
@@ -200,7 +200,7 @@ export async function actOnBooking(actor: Actor, bookingId: string, action: Step
       const next = steps.find((s) => s.step_order > current.step_order);
       if (next && next.status === "WAITING") {
         await query(`UPDATE approval_steps SET status = 'PENDING' WHERE id = $1`, [next.id], client);
-        await notify(client, await stepResolverUserIds(client, next, b.organization_id), "Pengajuan menunggu tindakan Anda", `${b.code} — ${b.title}`, link);
+        await notify(client, await stepResolverUserIds(client, next, b.organization_id), "Pengajuan menunggu tindakan Anda", b.title, link);
       }
       await query(`UPDATE bookings SET updated_at = now() WHERE id = $1`, [b.id], client);
       await audit(client, actor, "BOOKING_STEP_FORWARDED", "booking", b.id, { step: current.label, note });

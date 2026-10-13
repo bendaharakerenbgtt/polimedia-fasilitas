@@ -4,10 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { fmtDateTime } from "@/lib/time";
 
-// Menghapus pola kode pengajuan seperti "PJM-2026-00002 — " atau "PJM-2026-00002: "
+// Menghapus segala pola kode pengajuan seperti "PJM-2026-00003 (open rek futsal)", "PJM-2026-00002 — ", atau "PJM-..."
 function cleanNotificationBody(body: string) {
   if (!body) return "";
-  return body.replace(/^PJM-\d{4}-\d+\s*(—|-|:)\s*/i, "").trim();
+  // 1. Pola: PJM-YYYY-XXXXX (judul) sisa teks -> hilangkan PJM dan tanda kurungnya
+  let cleaned = body.replace(/^PJM-\d{4}-\d+\s*\(([^)]+)\)/i, "$1");
+  // 2. Pola: PJM-YYYY-XXXXX — atau PJM-YYYY-XXXXX: atau PJM-YYYY-XXXXX -
+  cleaned = cleaned.replace(/^PJM-\d{4}-\d+\s*(—|-|:)\s*/i, "");
+  // 3. Pola tersisa: PJM-YYYY-XXXXX di awal kalimat
+  cleaned = cleaned.replace(/^PJM-\d{4}-\d+\s*/i, "");
+  return cleaned.trim();
 }
 
 export default function CompactNotifications({

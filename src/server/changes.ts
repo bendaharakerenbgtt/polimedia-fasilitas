@@ -145,7 +145,7 @@ export async function requestBookingChange(
       client,
       oversightUsers,
       `Permohonan ${params.type === "CANCEL" ? "Pembatalan" : "Perubahan Jadwal"}`,
-      `${b.code} — ${b.title}: ${reason}`,
+      `${b.title}: ${reason}`,
       `/dashboard/peminjaman/${b.id}`
     );
 
@@ -223,7 +223,7 @@ export async function decideChangeRequest(
         client,
         orgUsers,
         `Permohonan ${cr.type === "CANCEL" ? "Pembatalan" : "Perubahan Jadwal"} Ditolak`,
-        `${b.code}: Permohonan ditolak oleh Wadir. Peminjaman semula tetap berlaku.`,
+        `Permohonan untuk "${b.title}" ditolak oleh Wadir. Peminjaman semula tetap berlaku.`,
         `/dashboard/peminjaman/${b.id}`
       );
 
@@ -282,7 +282,7 @@ export async function decideChangeRequest(
       client,
       orgUsers,
       `Permohonan ${cr.type === "CANCEL" ? "Pembatalan" : "Perubahan Jadwal"} Disetujui`,
-      `${b.code}: Permohonan telah disetujui oleh Wadir.`,
+      `Permohonan untuk "${b.title}" telah disetujui oleh Wadir.`,
       `/dashboard/peminjaman/${b.id}`
     );
 
