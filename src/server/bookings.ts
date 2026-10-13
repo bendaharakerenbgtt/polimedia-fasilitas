@@ -103,7 +103,7 @@ export async function createBookingDraft(
         JSON.stringify(d.otherParties ?? []),
         JSON.stringify(d.committee ?? []),
         JSON.stringify(d.rundown ?? []),
-        d.specialNotes ?? "",
+        d.specialNotes || (d.participants ? `Peserta Kegiatan: ${d.participants}` : ""),
         actor.id,
       ],
       client
@@ -243,7 +243,7 @@ export async function updateBookingDraft(
         d.otherParties ? JSON.stringify(d.otherParties) : null,
         d.committee ? JSON.stringify(d.committee) : null,
         d.rundown ? JSON.stringify(d.rundown) : null,
-        d.specialNotes,
+        d.specialNotes || (d.participants ? `Peserta Kegiatan: ${d.participants}` : null),
       ],
       client
     );
@@ -288,14 +288,18 @@ export async function submitBooking(actor: Actor, bookingId: string) {
       throw new AppError("Hanya pengajuan berstatus draft atau perlu revisi yang dapat dikirim.", "STATE");
     }
 
-    // Validasi kelengkapan kolom wajib
+    // Validasi kelengkapan kolom wajib (ketuplak opsional, jika tidak ada ketuplak gunakan kontak ketua organisasi)
+    const effectiveLeadName = b.lead_name?.trim() || b.chair_name?.trim() || "";
+    const effectiveLeadContact = b.lead_contact?.trim() || b.chair_contact?.trim() || "";
+
     submitRequiredSchema.parse({
       title: b.title,
       purpose: b.purpose,
       description: b.description,
       chairName: b.chair_name,
-      leadName: b.lead_name,
-      leadContact: b.lead_contact,
+      chairContact: b.chair_contact || "-",
+      leadName: effectiveLeadName,
+      leadContact: effectiveLeadContact,
     });
 
     // Jika ini adalah pengiriman ulang setelah revisi:

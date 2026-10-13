@@ -15,13 +15,22 @@ interface InventoryItemState {
 
 interface CommitteeMemberState {
   name: string;
+  division?: string;
   nim: string;
   prodi: string;
+}
+
+interface OtherPartyState {
+  name: string;
+  role: string;
+  contact: string;
 }
 
 interface RundownItemState {
   agenda: string;
   time: string;
+  startTime?: string;
+  endTime?: string;
   pic: string;
 }
 
@@ -63,6 +72,7 @@ export default function NewBookingForm({
   const [title, setTitle] = useState(initialBooking?.title ?? "");
   const [purpose, setPurpose] = useState(initialBooking?.purpose ?? "");
   const [description, setDescription] = useState(initialBooking?.description ?? "");
+  const [participants, setParticipants] = useState(initialBooking?.participants ?? "");
 
   // Inisialisasi daftar barang bawaan dari facilityItemsMap jika ada, atau standardItems
   const [inventoryItems, setInventoryItems] = useState<InventoryItemState[]>(() => {
@@ -107,23 +117,56 @@ export default function NewBookingForm({
     }
   }
 
-  // Panitia (Nama lengkap, NIM, Program Studi)
+  // Panitia (Nama lengkap, Divisi/Bidang, NIM, Program Studi) - Opsional
   const [committee, setCommittee] = useState<CommitteeMemberState[]>(() => {
     if (Array.isArray(initialBooking?.committee) && initialBooking.committee.length > 0) {
-      return initialBooking.committee;
+      return initialBooking.committee.map((c: any) => ({
+        name: c.name || "",
+        division: c.division || c.position || "",
+        nim: c.nim || "",
+        prodi: c.prodi || "",
+      }));
     }
-    return [{ name: "", nim: "", prodi: "" }];
+    return [{ name: "", division: "", nim: "", prodi: "" }];
   });
 
-  // Rundown (Nama kegiatan / Agenda, Waktu, Penanggung Jawab)
+  // Delegasi / Pihak Lain yang Terlibat - Opsional
+  const [otherParties, setOtherParties] = useState<OtherPartyState[]>(() => {
+    if (Array.isArray(initialBooking?.other_parties) && initialBooking.other_parties.length > 0) {
+      return initialBooking.other_parties;
+    }
+    return [];
+  });
+
+  // Rundown (Nama kegiatan / Agenda, Waktu mulai-selesai, Penanggung Jawab) - Opsional
   const [rundown, setRundown] = useState<RundownItemState[]>(() => {
     if (Array.isArray(initialBooking?.rundown) && initialBooking.rundown.length > 0) {
-      return initialBooking.rundown;
+      return initialBooking.rundown.map((r: any) => {
+        let startTime = r.startTime || "";
+        let endTime = r.endTime || "";
+        if (!startTime && r.time) {
+          const match = r.time.match(/(\d{1,2}[:.]\d{2})\s*[-–—]\s*(\d{1,2}[:.]\d{2})/);
+          if (match) {
+            startTime = match[1].replace(".", ":");
+            endTime = match[2].replace(".", ":");
+          }
+        }
+        return {
+          agenda: r.agenda || "",
+          time: r.time || "",
+          startTime,
+          endTime,
+          pic: r.pic || "",
+        };
+      });
     }
-    return [{ agenda: "", time: "", pic: "" }];
+    return [{ agenda: "", time: "08:00 - 09:00", startTime: "08:00", endTime: "09:00", pic: "" }];
   });
 
-  // TAHAP 3: PENANGGUNG JAWAB KEGIATAN (WAJIB KONTAK)
+  // TAHAP 3: PENANGGUNG JAWAB KEGIATAN
+  // Opsi ada ketuplak atau tanpa ketuplak (dipimpin langsung ketua organisasi)
+  const initialHasLead = Boolean(initialBooking?.lead_name && initialBooking.lead_name !== initialBooking?.chair_name);
+  const [hasLead, setHasLead] = useState<boolean>(initialBooking ? initialHasLead : true);
   const [leadName, setLeadName] = useState(initialBooking?.lead_name ?? "");
   const [leadContact, setLeadContact] = useState(initialBooking?.lead_contact ?? "");
   const [chairName, setChairName] = useState(initialBooking?.chair_name ?? "");
@@ -232,7 +275,7 @@ export default function NewBookingForm({
 
   // Helper panitia
   function addCommitteeMember() {
-    setCommittee((prev) => [...prev, { name: "", nim: "", prodi: "" }]);
+    setCommittee((prev) => [...prev, { name: "", division: "", nim: "", prodi: "" }]);
   }
 
   function removeCommitteeMember(idx: number) {
@@ -245,9 +288,39 @@ export default function NewBookingForm({
     );
   }
 
+  // Helper delegasi / pihak lain yang terlibat
+  function addOtherParty() {
+    setOtherParties((prev) => [...prev, { name: "", role: "", contact: "" }]);
+  }
+
+  function removeOtherParty(idx: number) {
+    setOtherParties((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function updateOtherParty(idx: number, field: keyof OtherPartyState, val: string) {
+    setOtherParties((prev) =>
+      prev.map((p, i) => (i === idx ? { ...p, [field]: val } : p))
+    );
+  }
+
   // Helper rundown
   function addRundownItem() {
-    setRundown((prev) => [...prev, { agenda: "", time: "", pic: "" }]);
+    // Cari waktu selesai dari item sebelumnya jika ada
+    const lastItem = rundown[rundown.length - 1];
+    let nextStart = lastItem?.endTime || "09:00";
+    let nextEnd = "10:00";
+    if (nextStart) {
+      const [h, m] = nextStart.split(":").map(Number);
+      if (!isNaN(h)) {
+        const endH = Math.min(23, h + 1);
+        nextEnd = `${String(endH).padStart(2, "0")}:${String(m || 0).padStart(2, "0")}`;
+      }
+    }
+    const formattedTime = `${nextStart.replace(":", ".")} – ${nextEnd.replace(":", ".")} WIB`;
+    setRundown((prev) => [
+      ...prev,
+      { agenda: "", time: formattedTime, startTime: nextStart, endTime: nextEnd, pic: "" },
+    ]);
   }
 
   function removeRundownItem(idx: number) {
@@ -256,7 +329,40 @@ export default function NewBookingForm({
 
   function updateRundown(idx: number, field: keyof RundownItemState, val: string) {
     setRundown((prev) =>
-      prev.map((r, i) => (i === idx ? { ...r, [field]: val } : r))
+      prev.map((r, i) => {
+        if (i !== idx) return r;
+        const updated = { ...r, [field]: val };
+        // Jika mengubah startTime atau endTime, otomatis sinkronkan string time tampilan
+        if (field === "startTime" || field === "endTime") {
+          const s = field === "startTime" ? val : updated.startTime || "";
+          const e = field === "endTime" ? val : updated.endTime || "";
+          if (s && e) {
+            updated.time = `${s.replace(":", ".")} – ${e.replace(":", ".")} WIB`;
+          } else if (s) {
+            updated.time = `${s.replace(":", ".")} WIB`;
+          }
+        }
+        return updated;
+      })
+    );
+  }
+
+  // Preset durasi cepat per mata acara rundown
+  function applyRundownDurationPreset(idx: number, startVal: string, durationMinutes: number) {
+    if (!startVal) return;
+    const [h, m] = startVal.split(":").map(Number);
+    if (isNaN(h)) return;
+    const totalMinutes = h * 60 + (m || 0) + durationMinutes;
+    const endH = Math.floor(totalMinutes / 60) % 24;
+    const endM = totalMinutes % 60;
+    const endStr = `${String(endH).padStart(2, "0")}:${String(endM).padStart(2, "0")}`;
+    const formatted = `${startVal.replace(":", ".")} – ${endStr.replace(":", ".")} WIB`;
+    setRundown((prev) =>
+      prev.map((r, i) =>
+        i === idx
+          ? { ...r, startTime: startVal, endTime: endStr, time: formatted }
+          : r
+      )
     );
   }
 
@@ -297,10 +403,15 @@ export default function NewBookingForm({
     }
   }
 
-  // Filter barang yang kuantitasnya > 0 untuk dikirim
+  // Filter data untuk dikirim
   const activeItemsToSubmit = inventoryItems.filter((it) => it.quantity > 0);
   const activeCommitteeToSubmit = committee.filter((c) => c.name.trim().length > 0);
+  const activeOtherPartiesToSubmit = otherParties.filter((p) => p.name.trim().length > 0);
   const activeRundownToSubmit = rundown.filter((r) => r.agenda.trim().length > 0);
+
+  // Penanggung jawab efektif: jika hasLead dimatikan, otomatis fallback ke Ketua Organisasi
+  const effectiveLeadName = hasLead ? leadName : chairName;
+  const effectiveLeadContact = hasLead ? leadContact : chairContact;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -424,12 +535,14 @@ export default function NewBookingForm({
         <input type="hidden" name="title" value={title} />
         <input type="hidden" name="purpose" value={purpose} />
         <input type="hidden" name="description" value={description} />
-        <input type="hidden" name="leadName" value={leadName} />
-        <input type="hidden" name="leadContact" value={leadContact} />
+        <input type="hidden" name="participants" value={participants} />
+        <input type="hidden" name="leadName" value={effectiveLeadName} />
+        <input type="hidden" name="leadContact" value={effectiveLeadContact} />
         <input type="hidden" name="chairName" value={chairName} />
         <input type="hidden" name="chairContact" value={chairContact} />
         <input type="hidden" name="itemsJson" value={JSON.stringify(activeItemsToSubmit)} />
         <input type="hidden" name="committeeJson" value={JSON.stringify(activeCommitteeToSubmit)} />
+        <input type="hidden" name="otherPartiesJson" value={JSON.stringify(activeOtherPartiesToSubmit)} />
         <input type="hidden" name="rundownJson" value={JSON.stringify(activeRundownToSubmit)} />
 
         {/* =========================================================================
@@ -910,9 +1023,31 @@ export default function NewBookingForm({
                   required
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Jelaskan ringkasan agenda, target peserta, dan rangkaian kegiatan yang akan berlangsung..."
+                  placeholder="Jelaskan ringkasan agenda dan rangkaian kegiatan yang akan berlangsung..."
                   className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
                 ></textarea>
+              </div>
+
+              {/* KOLOM PESERTA KEGIATAN (OPSIONAL) */}
+              <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    Target / Peserta Kegiatan <span className="text-slate-400 font-normal lowercase">(opsional)</span>
+                  </label>
+                  <span className="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                    Opsional
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={participants}
+                  onChange={(e) => setParticipants(e.target.value)}
+                  placeholder="Contoh: Estimasi 150 mahasiswa seluruh jurusan PoliMedia & tamu undangan luar kampus"
+                  className="w-full px-3.5 py-2 bg-white text-slate-900 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-[11px] text-slate-500">
+                  Cantumkan perkiraan jumlah peserta, sasaran audiens (mahasiswa umum/jurusan tertentu), atau tamu undangan bila ada.
+                </p>
               </div>
             </div>
 
@@ -1001,15 +1136,16 @@ export default function NewBookingForm({
               </div>
             </div>
 
-            {/* SUSUNAN PANITIA (NAMA LENGKAP, NIM, PROGRAM STUDI) */}
+            {/* SUSUNAN PANITIA (NAMA LENGKAP, DIVISI, NIM, PROGRAM STUDI) - OPSIONAL */}
             <div className="space-y-3 pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-extrabold text-slate-900">
-                    👥 Susunan Panitia Pelaksana
+                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                    <span>👥 Susunan Panitia Pelaksana</span>
+                    <span className="text-[11px] font-normal text-slate-400 lowercase">(opsional)</span>
                   </h4>
                   <p className="text-xs text-slate-500">
-                    Cantumkan nama lengkap panitia, NIM, dan Program Studi
+                    Bisa dikosongkan atau diisi nama panitia, divisi (opsional), NIM, dan Program Studi
                   </p>
                 </div>
                 <button
@@ -1027,10 +1163,10 @@ export default function NewBookingForm({
                     key={idx}
                     className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 items-center"
                   >
-                    <div className="sm:col-span-5">
+                    <div className="sm:col-span-4">
                       <input
                         type="text"
-                        placeholder="Nama Lengkap Panitia *"
+                        placeholder="Nama Lengkap Panitia (Opsional)"
                         value={member.name}
                         onChange={(e) => updateCommittee(idx, "name", e.target.value)}
                         className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
@@ -1039,16 +1175,25 @@ export default function NewBookingForm({
                     <div className="sm:col-span-3">
                       <input
                         type="text"
-                        placeholder="NIM *"
+                        placeholder="Divisi / Bidang (Opsional)"
+                        value={member.division || ""}
+                        onChange={(e) => updateCommittee(idx, "division", e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <input
+                        type="text"
+                        placeholder="NIM"
                         value={member.nim}
                         onChange={(e) => updateCommittee(idx, "nim", e.target.value)}
                         className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono"
                       />
                     </div>
-                    <div className="sm:col-span-3">
+                    <div className="sm:col-span-2">
                       <input
                         type="text"
-                        placeholder="Program Studi *"
+                        placeholder="Program Studi"
                         value={member.prodi}
                         onChange={(e) => updateCommittee(idx, "prodi", e.target.value)}
                         className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
@@ -1071,15 +1216,91 @@ export default function NewBookingForm({
               </div>
             </div>
 
-            {/* SUSUNAN KEGIATAN / RUNDOWN (NAMA KEGIATAN, WAKTU, PENANGGUNG JAWAB) */}
+            {/* DELEGASI / PIHAK LAIN YANG TERLIBAT - OPSIONAL */}
             <div className="space-y-3 pt-2 border-t border-slate-100">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-sm font-extrabold text-slate-900">
-                    ⏱️ Susunan Kegiatan (Rundown Acara)
+                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                    <span>🤝 Delegasi / Pihak Eksternal yang Terlibat</span>
+                    <span className="text-[11px] font-normal text-slate-400 lowercase">(opsional)</span>
                   </h4>
                   <p className="text-xs text-slate-500">
-                    Nama kegiatan, perkiraan waktu pelaksanaan, dan penanggung jawab mata acara
+                    Bila kegiatan melibatkan pengisi acara eksternal, pemateri, juri, atau sponsor
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={addOtherParty}
+                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                >
+                  + Tambah Delegasi
+                </button>
+              </div>
+
+              {otherParties.length === 0 ? (
+                <div className="p-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
+                  Belum ada delegasi/pihak lain yang ditambahkan. Klik <strong>+ Tambah Delegasi</strong> jika diperlukan.
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {otherParties.map((party, idx) => (
+                    <div
+                      key={idx}
+                      className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 items-center"
+                    >
+                      <div className="sm:col-span-4">
+                        <input
+                          type="text"
+                          placeholder="Nama Pihak / Instansi (Opsional)"
+                          value={party.name}
+                          onChange={(e) => updateOtherParty(idx, "name", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="sm:col-span-4">
+                        <input
+                          type="text"
+                          placeholder="Peran (e.g. Pemateri, Juri, Sponsor)"
+                          value={party.role}
+                          onChange={(e) => updateOtherParty(idx, "role", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <input
+                          type="text"
+                          placeholder="Kontak HP / Email"
+                          value={party.contact}
+                          onChange={(e) => updateOtherParty(idx, "contact", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono"
+                        />
+                      </div>
+                      <div className="sm:col-span-1 text-right">
+                        <button
+                          type="button"
+                          onClick={() => removeOtherParty(idx)}
+                          className="w-7 h-7 rounded-lg text-rose-600 hover:bg-rose-100 font-bold transition inline-flex items-center justify-center cursor-pointer"
+                          title="Hapus baris"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* SUSUNAN KEGIATAN / RUNDOWN (FORMAT JAM MUDAH DIISI, TIDAK MANUAL) */}
+            <div className="space-y-3 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
+                    <span>⏱️ Susunan Kegiatan (Rundown Acara)</span>
+                    <span className="text-[11px] font-normal text-slate-400 lowercase">(opsional)</span>
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    Pilih jam mulai & selesai agar waktu tersusun rapi otomatis, serta nama mata acara dan PIC
                   </p>
                 </div>
                 <button
@@ -1091,50 +1312,123 @@ export default function NewBookingForm({
                 </button>
               </div>
 
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 {rundown.map((item, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 items-center"
+                    className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5"
                   >
-                    <div className="sm:col-span-5">
-                      <input
-                        type="text"
-                        placeholder="Nama Kegiatan / Sesi *"
-                        value={item.agenda}
-                        onChange={(e) => updateRundown(idx, "agenda", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+                      <div className="sm:col-span-5">
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          Nama Kegiatan / Sesi Acara:
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Pembukaan & Sambutan Ketua"
+                          value={item.agenda}
+                          onChange={(e) => updateRundown(idx, "agenda", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+
+                      {/* Time Picker Mulai & Selesai yang otomatis membentuk format rapi */}
+                      <div className="sm:col-span-4 space-y-1">
+                        <label className="block text-[11px] font-bold text-slate-700">
+                          Waktu Pelaksanaan (Mulai – Selesai):
+                        </label>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="time"
+                            value={item.startTime || ""}
+                            onChange={(e) => updateRundown(idx, "startTime", e.target.value)}
+                            className="w-1/2 px-2.5 py-1.5 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                          />
+                          <span className="text-slate-400 font-bold">–</span>
+                          <input
+                            type="time"
+                            value={item.endTime || ""}
+                            onChange={(e) => updateRundown(idx, "endTime", e.target.value)}
+                            className="w-1/2 px-2.5 py-1.5 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          PIC / Pemateri:
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Nama PIC"
+                          value={item.pic}
+                          onChange={(e) => updateRundown(idx, "pic", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-1 text-right pt-4 sm:pt-0">
+                        {rundown.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeRundownItem(idx)}
+                            className="w-7 h-7 rounded-lg text-rose-600 hover:bg-rose-100 font-bold transition inline-flex items-center justify-center cursor-pointer"
+                            title="Hapus baris"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div className="sm:col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Waktu (e.g. 08:30 - 09:30)"
-                        value={item.time}
-                        onChange={(e) => updateRundown(idx, "time", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
-                      />
-                    </div>
-                    <div className="sm:col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Penanggung Jawab (PIC)"
-                        value={item.pic}
-                        onChange={(e) => updateRundown(idx, "pic", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
-                      />
-                    </div>
-                    <div className="sm:col-span-1 text-right">
-                      {rundown.length > 1 && (
+
+                    {/* Ringkasan waktu otomatis & tombol durasi cepat */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/70 text-[11px]">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <span className="font-semibold text-slate-500">Tampilan Waktu:</span>
+                        <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          {item.time || (item.startTime && item.endTime ? `${item.startTime.replace(":", ".")} – ${item.endTime.replace(":", ".")} WIB` : "Belum diatur")}
+                        </span>
+                      </div>
+
+                      {/* Tombol preset durasi cepat (30 mnt, 45 mnt, 60 mnt, 90 mnt, 120 mnt) */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-slate-400 text-[10px]">Set Durasi:</span>
                         <button
                           type="button"
-                          onClick={() => removeRundownItem(idx)}
-                          className="w-7 h-7 rounded-lg text-rose-600 hover:bg-rose-100 font-bold transition inline-flex items-center justify-center cursor-pointer"
-                          title="Hapus baris"
+                          onClick={() => applyRundownDurationPreset(idx, item.startTime || "08:00", 30)}
+                          className="px-2 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-medium cursor-pointer"
                         >
-                          ✕
+                          +30m
                         </button>
-                      )}
+                        <button
+                          type="button"
+                          onClick={() => applyRundownDurationPreset(idx, item.startTime || "08:00", 45)}
+                          className="px-2 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-medium cursor-pointer"
+                        >
+                          +45m
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyRundownDurationPreset(idx, item.startTime || "08:00", 60)}
+                          className="px-2 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-medium cursor-pointer"
+                        >
+                          +1 jam
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyRundownDurationPreset(idx, item.startTime || "08:00", 90)}
+                          className="px-2 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-medium cursor-pointer"
+                        >
+                          +1.5 jam
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => applyRundownDurationPreset(idx, item.startTime || "08:00", 120)}
+                          className="px-2 py-0.5 rounded bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-medium cursor-pointer"
+                        >
+                          +2 jam
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -1179,70 +1473,117 @@ export default function NewBookingForm({
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
-                <div className="font-extrabold text-slate-900 text-sm flex items-center gap-2 border-b border-slate-200 pb-2">
-                  <span>🎖️</span>
-                  <span>Ketua Pelaksana Kegiatan</span>
-                </div>
+            <div className="space-y-4">
+              {/* Opsi / Checkbox Pilihan Ada Ketuplak vs Tanpa Ketuplak */}
+              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Nama Lengkap Ketua Pelaksana *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={leadName}
-                    onChange={(e) => setLeadName(e.target.value)}
-                    placeholder="Nama lengkap ketua pelaksana"
-                    className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
-                  />
+                  <span className="font-extrabold text-xs text-slate-800 block">
+                    Penetapan Ketua Pelaksana Kegiatan
+                  </span>
+                  <span className="text-[11px] text-slate-500">
+                    Awalnya disediakan ketua pelaksana khusus, namun kegiatan dapat diajukan tanpa ketua pelaksana (dipimpin langsung oleh Ketua Organisasi).
+                  </span>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Kontak WhatsApp / No. HP (Wajib) *
-                  </label>
+                <label className="inline-flex items-center gap-2 cursor-pointer shrink-0 bg-white px-3 py-1.5 rounded-lg border border-slate-300 hover:bg-slate-50 select-none shadow-2xs">
                   <input
-                    type="text"
-                    required
-                    value={leadContact}
-                    onChange={(e) => setLeadContact(e.target.value)}
-                    placeholder="08xxxxxxxxxx"
-                    className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                    type="checkbox"
+                    checked={hasLead}
+                    onChange={(e) => setHasLead(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
                   />
-                </div>
+                  <span className="text-xs font-bold text-slate-800">
+                    Ada Ketua Pelaksana Khusus
+                  </span>
+                </label>
               </div>
 
-              <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
-                <div className="font-extrabold text-slate-900 text-sm flex items-center gap-2 border-b border-slate-200 pb-2">
-                  <span>🏛️</span>
-                  <span>Ketua Organisasi (BEM / HIMA / UKM)</span>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Nama Lengkap Ketua Organisasi *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={chairName}
-                    onChange={(e) => setChairName(e.target.value)}
-                    placeholder="Nama lengkap ketua organisasi"
-                    className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                    Kontak WhatsApp / No. HP (Wajib) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={chairContact}
-                    onChange={(e) => setChairContact(e.target.value)}
-                    placeholder="08xxxxxxxxxx"
-                    className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                {/* 1. KETUA PELAKSANA (JIKA ADA) */}
+                {hasLead ? (
+                  <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4 animate-in fade-in duration-150">
+                    <div className="font-extrabold text-slate-900 text-sm flex items-center justify-between border-b border-slate-200 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span>🎖️</span>
+                        <span>Ketua Pelaksana Kegiatan</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        Opsional Diaktifkan
+                      </span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Nama Lengkap Ketua Pelaksana
+                      </label>
+                      <input
+                        type="text"
+                        value={leadName}
+                        onChange={(e) => setLeadName(e.target.value)}
+                        placeholder="Nama lengkap ketua pelaksana (opsional)"
+                        className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Kontak WhatsApp / No. HP Ketuplak
+                      </label>
+                      <input
+                        type="text"
+                        value={leadContact}
+                        onChange={(e) => setLeadContact(e.target.value)}
+                        placeholder="08xxxxxxxxxx (opsional)"
+                        className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-purple-50/70 p-5 rounded-2xl border border-purple-200/80 flex flex-col justify-center space-y-2 text-xs text-purple-950 animate-in fade-in duration-150">
+                    <div className="flex items-center gap-2 font-bold text-sm text-purple-900">
+                      <span>✓</span>
+                      <span>Tanpa Ketua Pelaksana Khusus</span>
+                    </div>
+                    <p className="text-[11px] text-purple-800 leading-relaxed">
+                      Kegiatan ini dipimpin dan dipertanggungjawabkan langsung oleh <strong>Ketua Organisasi</strong>. Data kontak Ketua Organisasi di sebelah kanan otomatis menjadi penanggung jawab resmi peminjaman fasilitas.
+                    </p>
+                  </div>
+                )}
+
+                {/* 2. KETUA ORGANISASI (UTAMA & WAJIB) */}
+                <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
+                  <div className="font-extrabold text-slate-900 text-sm flex items-center justify-between border-b border-slate-200 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span>🏛️</span>
+                      <span>Ketua Organisasi (BEM / HIMA / UKM)</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                      Penanggung Jawab Utama *
+                    </span>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Nama Lengkap Ketua Organisasi *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={chairName}
+                      onChange={(e) => setChairName(e.target.value)}
+                      placeholder="Nama lengkap ketua organisasi pemohon"
+                      className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                      Kontak WhatsApp / No. HP (Wajib Konfirmasi) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={chairContact}
+                      onChange={(e) => setChairContact(e.target.value)}
+                      placeholder="08xxxxxxxxxx"
+                      className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

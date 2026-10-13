@@ -38,9 +38,10 @@ export async function createBookingDraftAction(prevState: any, formData: FormDat
   const chairContact = String(formData.get("chairContact") ?? "").trim();
   const leadName = String(formData.get("leadName") ?? "").trim();
   const leadContact = String(formData.get("leadContact") ?? "").trim();
+  const participants = String(formData.get("participants") ?? "").trim();
   const specialNotes = String(formData.get("specialNotes") ?? "").trim();
 
-  // Parse items, committee, rundown
+  // Parse items, committee, rundown, otherParties
   let items: any[] = [];
   try {
     const rawItems = formData.get("itemsJson");
@@ -59,6 +60,12 @@ export async function createBookingDraftAction(prevState: any, formData: FormDat
     if (rawRun) rundown = JSON.parse(String(rawRun));
   } catch {}
 
+  let otherParties: any[] = [];
+  try {
+    const rawOther = formData.get("otherPartiesJson");
+    if (rawOther) otherParties = JSON.parse(String(rawOther));
+  } catch {}
+
   try {
     const booking = await createBookingDraft(user, {
       facilityId,
@@ -74,6 +81,8 @@ export async function createBookingDraftAction(prevState: any, formData: FormDat
         chairContact,
         leadName,
         leadContact,
+        participants,
+        otherParties,
         specialNotes,
         items,
         committee,
@@ -115,9 +124,10 @@ export async function updateBookingDraftAction(bookingId: string, prevState: any
   const chairContact = String(formData.get("chairContact") ?? "").trim();
   const leadName = String(formData.get("leadName") ?? "").trim();
   const leadContact = String(formData.get("leadContact") ?? "").trim();
+  const participants = String(formData.get("participants") ?? "").trim();
   const specialNotes = String(formData.get("specialNotes") ?? "").trim();
 
-  // Parse items, committee, rundown
+  // Parse items, committee, rundown, otherParties
   let items: any[] = [];
   try {
     const rawItems = formData.get("itemsJson");
@@ -134,6 +144,12 @@ export async function updateBookingDraftAction(bookingId: string, prevState: any
   try {
     const rawRun = formData.get("rundownJson");
     if (rawRun) rundown = JSON.parse(String(rawRun));
+  } catch {}
+
+  let otherParties: any[] = [];
+  try {
+    const rawOther = formData.get("otherPartiesJson");
+    if (rawOther) otherParties = JSON.parse(String(rawOther));
   } catch {}
 
   const andSubmit = formData.get("andSubmit") === "true";
@@ -153,6 +169,8 @@ export async function updateBookingDraftAction(bookingId: string, prevState: any
         chairContact,
         leadName,
         leadContact,
+        participants,
+        otherParties,
         specialNotes,
         items,
         committee,

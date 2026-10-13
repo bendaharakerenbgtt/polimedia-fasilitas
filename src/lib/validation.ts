@@ -55,16 +55,18 @@ export const bookingDetailsSchema = z.object({
   description: str(5000),
   chairName: str(150),
   chairContact: phone,
-  leadName: str(150),
-  leadContact: phone,
+  leadName: str(150).default(""),
+  leadContact: phone.default(""),
+  participants: str(5000).default(""),
   otherParties: z
-    .array(z.object({ name: req(150, "Nama"), role: str(150), contact: phone }))
+    .array(z.object({ name: str(150).default(""), role: str(150).default(""), contact: phone.default("") }))
     .max(30)
     .default([]),
   committee: z
     .array(
       z.object({
-        name: req(150, "Nama panitia"),
+        name: str(150).default(""),
+        division: str(100).default(""),
         nim: str(50).default(""),
         prodi: str(100).default(""),
       })
@@ -74,8 +76,10 @@ export const bookingDetailsSchema = z.object({
   rundown: z
     .array(
       z.object({
-        agenda: req(300, "Nama kegiatan"),
+        agenda: str(300).default(""),
         time: str(100).default(""),
+        startTime: str(10).default(""),
+        endTime: str(10).default(""),
         pic: str(150).default(""),
       })
     )
@@ -101,8 +105,9 @@ export const submitRequiredSchema = z.object({
   purpose: req(500, "Perihal/tujuan"),
   description: req(5000, "Deskripsi kegiatan"),
   chairName: req(150, "Nama ketua organisasi"),
-  leadName: req(150, "Nama ketua pelaksana"),
-  leadContact: req(30, "Kontak ketua pelaksana"),
+  chairContact: req(30, "Kontak ketua organisasi"),
+  leadName: str(150).default(""),
+  leadContact: str(30).default(""),
 });
 
 export function firstError(err: z.ZodError): string {
