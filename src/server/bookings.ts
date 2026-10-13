@@ -587,7 +587,7 @@ export async function getCampusCalendarEvents(): Promise<CampusCalendarEvent[]> 
     ORDER BY b.event_start ASC
   `);
 
-  const mapped = rows.map((r) => ({
+  return rows.map((r) => ({
     id: r.id,
     code: r.code,
     title: r.title,
@@ -606,54 +606,4 @@ export async function getCampusCalendarEvents(): Promise<CampusCalendarEvent[]> 
     eventEnd: new Date(r.event_end),
     usageEnd: new Date(r.usage_end),
   }));
-
-  // Pastikan simulasi multi-acara (3 acara) di 16 Oktober 2026 langsung terlihat
-  const hasWorkshop = mapped.some((m) => m.title.includes("Workshop UI/UX"));
-  if (!hasWorkshop) {
-    mapped.push(
-      {
-        id: "sim-16-oct-1",
-        code: "SIM-2026-001",
-        title: "Workshop UI/UX Design",
-        purpose: "Pelatihan desain antarmuka bagi mahasiswa baru kreatif",
-        description: "Kegiatan workshop mendatangkan praktisi industri kreatif mengenai tren UI/UX dan design system terkini.",
-        status: "APPROVED",
-        facilityId: "sim-fac-1",
-        facilityName: "Pusgiwa Lantai 2",
-        facilityLocation: "Lantai 2, Pusgiwa (Pusat Kegiatan Mahasiswa) Politeknik Negeri Media Kreatif Jakarta",
-        orgName: "HIMA Desain Grafis",
-        orgType: "HIMA",
-        leadName: "Siti Rahma",
-        leadContact: "0812-9876-5432",
-        usageStart: new Date("2026-10-16T08:30:00+07:00"),
-        eventStart: new Date("2026-10-16T09:00:00+07:00"),
-        eventEnd: new Date("2026-10-16T12:00:00+07:00"),
-        usageEnd: new Date("2026-10-16T12:30:00+07:00"),
-      },
-      {
-        id: "sim-16-oct-2",
-        code: "SIM-2026-002",
-        title: "Latihan Rutin Teater Kampus",
-        purpose: "Gladi resik pementasan drama festival tahunan",
-        description: "Latihan bersama UKM Teater untuk persiapan pentas seni akhir semester kampus Politeknik Negeri Media Kreatif.",
-        status: "APPROVED",
-        facilityId: "sim-fac-2",
-        facilityName: "Aula PoliMedia",
-        facilityLocation: "Aula Gedung B Lantai 3, Politeknik Negeri Media Kreatif Jakarta",
-        orgName: "UKM Teater",
-        orgType: "UKM",
-        leadName: "Dimas Prasetyo",
-        leadContact: "0856-1234-5678",
-        usageStart: new Date("2026-10-16T13:30:00+07:00"),
-        eventStart: new Date("2026-10-16T14:00:00+07:00"),
-        eventEnd: new Date("2026-10-16T17:30:00+07:00"),
-        usageEnd: new Date("2026-10-16T18:00:00+07:00"),
-      }
-    );
-  }
-
-  // Sortir berdasarkan eventStart
-  mapped.sort((a, b) => new Date(a.eventStart).getTime() - new Date(b.eventStart).getTime());
-
-  return mapped;
 }
