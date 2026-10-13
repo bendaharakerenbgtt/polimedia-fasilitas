@@ -146,6 +146,49 @@ export default function NewBookingForm({
 
   const selectedFacilityObj = facilities.find((f) => f.id === facilityId);
 
+  // Helper format tanggal ramah pengguna: "Jumat, 30 Okt 2026"
+  function formatReadableDate(dateStr: string) {
+    if (!dateStr) return "";
+    const parts = dateStr.split("-");
+    if (parts.length !== 3) return "";
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const dateObj = new Date(y, m, d);
+    if (isNaN(dateObj.getTime())) return "";
+
+    const days = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    const fullDays = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+    const months = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    return `${fullDays[dateObj.getDay()]}, ${d} ${months[m]} ${y}`;
+  }
+
+  // Helper format ringkasan waktu lengkap: "Jum, 30 Okt 2026, 07.00–17.00 WIB"
+  function formatScheduleSummary(startDt: string, endDt: string) {
+    if (!startDt || !endDt) return "";
+    const startDatePart = startDt.split("T")[0];
+    const startTimePart = startDt.split("T")[1] || "";
+    const endTimePart = endDt.split("T")[1] || "";
+
+    const parts = startDatePart.split("-");
+    if (parts.length !== 3) return "";
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const dateObj = new Date(y, m, d);
+    if (isNaN(dateObj.getTime())) return "";
+
+    const shortDays = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+    const shortMonths = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+    const dayName = shortDays[dateObj.getDay()];
+    const monthName = shortMonths[m];
+
+    const sTime = startTimePart.replace(":", ".");
+    const eTime = endTimePart.replace(":", ".");
+
+    return `${dayName}, ${d} ${monthName} ${y}, ${sTime}–${eTime} WIB`;
+  }
+
   // Handler preset jam
   function applyTimePreset(dateVal: string, presetType: string) {
     if (!dateVal) return;
@@ -535,23 +578,24 @@ export default function NewBookingForm({
             </div>
 
             {/* PENGISIAN CEPAT WAKTU */}
-            <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-900 flex items-center gap-1.5">
-                  <span>⚡</span>
+            <div className="bg-gradient-to-br from-purple-50/70 to-blue-50/60 border border-purple-200/80 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xs">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-purple-900 flex items-center gap-1.5">
+                  <span className="text-amber-500 text-sm">⚡</span>
                   <span>Pengisian Cepat Waktu Acara</span>
                 </span>
-                <span className="text-[11px] text-blue-700 font-medium">
+                <span className="text-[11px] text-purple-800 font-semibold bg-white/80 border border-purple-200 px-2.5 py-0.5 rounded-full w-fit">
                   Aturan: Min. H-3 Acara
                 </span>
               </div>
-              <p className="text-xs text-blue-800 leading-relaxed">
-                Pilih tanggal kegiatan (minimal {minDate}), lalu klik tombol preset jam di bawah untuk mengisi jam mulai dan selesai secara otomatis:
+
+              <p className="text-xs text-slate-700 leading-relaxed">
+                Pilih tanggal kegiatan, lalu klik preset jam di bawah untuk mengisi jadwal persiapan, acara, hingga bersih-bersih secara otomatis:
               </p>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                <div className="sm:w-60">
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                <div className="sm:w-64 space-y-1">
+                  <label className="block text-[11px] font-bold text-slate-700">
                     Tanggal Acara (Min. {minDate}):
                   </label>
                   <input
@@ -563,12 +607,18 @@ export default function NewBookingForm({
                       setShortcutDate(d);
                       if (shortcutTimeSlot) applyTimePreset(d, shortcutTimeSlot);
                     }}
-                    className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-purple-300 rounded-xl text-xs font-bold focus:ring-2 focus:ring-purple-500 outline-none shadow-2xs"
                   />
+                  {shortcutDate && (
+                    <div className="inline-flex items-center gap-1.5 text-xs font-extrabold text-purple-900 bg-purple-100/80 px-2.5 py-1 rounded-lg border border-purple-200 mt-1">
+                      <span>📅</span>
+                      <span>{formatReadableDate(shortcutDate)}</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex-1">
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                <div className="flex-1 space-y-1">
+                  <label className="block text-[11px] font-bold text-slate-700">
                     Pilihan Preset Jam:
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -576,10 +626,10 @@ export default function NewBookingForm({
                       type="button"
                       disabled={!shortcutDate}
                       onClick={() => applyTimePreset(shortcutDate, "PAGI_SIANG")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer disabled:opacity-50 ${
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs ${
                         shortcutTimeSlot === "PAGI_SIANG"
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                          ? "bg-purple-800 text-amber-300 border-purple-900 shadow-xs font-extrabold"
+                          : "bg-white text-slate-700 border-slate-300 hover:bg-purple-50 hover:text-purple-900"
                       }`}
                     >
                       Pagi – Siang (08:00 – 12:00)
@@ -588,10 +638,10 @@ export default function NewBookingForm({
                       type="button"
                       disabled={!shortcutDate}
                       onClick={() => applyTimePreset(shortcutDate, "SIANG_SORE")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer disabled:opacity-50 ${
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs ${
                         shortcutTimeSlot === "SIANG_SORE"
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                          ? "bg-purple-800 text-amber-300 border-purple-900 shadow-xs font-extrabold"
+                          : "bg-white text-slate-700 border-slate-300 hover:bg-purple-50 hover:text-purple-900"
                       }`}
                     >
                       Siang – Sore (13:00 – 17:00)
@@ -600,10 +650,10 @@ export default function NewBookingForm({
                       type="button"
                       disabled={!shortcutDate}
                       onClick={() => applyTimePreset(shortcutDate, "SEHARIAN")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer disabled:opacity-50 ${
+                      className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed shadow-2xs ${
                         shortcutTimeSlot === "SEHARIAN"
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
+                          ? "bg-purple-800 text-amber-300 border-purple-900 shadow-xs font-extrabold"
+                          : "bg-white text-slate-700 border-slate-300 hover:bg-purple-50 hover:text-purple-900"
                       }`}
                     >
                       Seharian Penuh (08:00 – 16:00)
@@ -611,79 +661,183 @@ export default function NewBookingForm({
                   </div>
                 </div>
               </div>
+
+              {/* Ringkasan Jadwal Otomatis yang Terbentuk */}
+              {usageStart && usageEnd && (
+                <div className="pt-3 border-t border-purple-200/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-slate-600">Total Waktu Penggunaan:</span>
+                    <strong className="text-purple-950 font-extrabold bg-white px-2.5 py-1 rounded-lg border border-purple-200 shadow-2xs">
+                      {formatScheduleSummary(usageStart, usageEnd)}
+                    </strong>
+                  </div>
+                  {eventStart && eventEnd && (
+                    <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                      <span>Waktu Acara Utama:</span>
+                      <strong className="text-slate-800">
+                        {eventStart.split("T")[1]?.replace(":", ".")} – {eventEnd.split("T")[1]?.replace(":", ".")} WIB
+                      </strong>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* JAM OPERASIONAL INFO BANNER */}
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-start sm:items-center justify-between gap-2">
+            <div className="p-3 bg-purple-50/50 border border-purple-200 rounded-xl text-xs text-purple-950 flex items-start sm:items-center justify-between gap-2">
               <div>
                 <span className="font-bold">Jam Operasional Perizinan Fasilitas Kampus:</span>{" "}
                 <span>Pukul <strong>06:00 s.d. 18:30 WIB</strong> pada hari yang sama.</span>
               </div>
-              <span className="text-[11px] font-semibold bg-blue-100 text-blue-800 px-2 py-0.5 rounded shrink-0">
+              <span className="text-[11px] font-semibold bg-purple-200/80 text-purple-900 px-2 py-0.5 rounded shrink-0">
                 WIB (UTC+7)
               </span>
             </div>
 
-            {/* DETAIL INPUT DATETIME-LOCAL */}
+            {/* DETAIL INPUT DATETIME-LOCAL DENGAN TOOLTIP LENGKAP */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  1. Mulai Penggunaan Fasilitas *
-                </label>
+              {/* 1. Mulai Penggunaan Fasilitas */}
+              <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>1. Mulai Penggunaan Fasilitas *</span>
+                  </label>
+                  {/* Tooltip Icon */}
+                  <div className="relative group cursor-pointer inline-flex items-center">
+                    <span className="w-5 h-5 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-800 flex items-center justify-center text-xs font-bold transition">
+                      ?
+                    </span>
+                    <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl z-20 pointer-events-none leading-relaxed border border-slate-800">
+                      <strong className="block text-amber-300 font-extrabold mb-1">Mulai Penggunaan Fasilitas:</strong>
+                      Waktu pertama kali masuk ke ruangan/gedung untuk persiapan, bongkar muat logistik, gladi resik, dan dekorasi (paling awal 06:00 WIB).
+                    </div>
+                  </div>
+                </div>
+
                 <input
                   type="datetime-local"
                   required
                   min={`${minDate}T00:00`}
                   value={usageStart}
                   onChange={(e) => setUsageStart(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-600 font-mono shadow-2xs"
                 />
-                <span className="text-[11px] text-slate-500">Persiapan & muat alat (paling awal 06:00 WIB)</span>
+                <div className="text-[11px] text-slate-500 flex items-center justify-between">
+                  <span>Persiapan, gladi & muat alat</span>
+                  {usageStart && (
+                    <span className="text-purple-800 font-bold">
+                      {formatReadableDate(usageStart.split("T")[0])}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  2. Mulai Acara Resmi *
-                </label>
+              {/* 2. Mulai Acara Resmi */}
+              <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>2. Mulai Acara Resmi *</span>
+                  </label>
+                  {/* Tooltip Icon */}
+                  <div className="relative group cursor-pointer inline-flex items-center">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-800 flex items-center justify-center text-xs font-bold transition">
+                      ?
+                    </span>
+                    <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl z-20 pointer-events-none leading-relaxed border border-slate-800">
+                      <strong className="block text-blue-300 font-extrabold mb-1">Mulai Acara Resmi:</strong>
+                      Waktu acara utama dibuka untuk peserta/undangan. Jam ini yang akan <strong>didisplay di portal publik kampus & kalender agenda</strong>.
+                    </div>
+                  </div>
+                </div>
+
                 <input
                   type="datetime-local"
                   required
                   min={`${minDate}T00:00`}
                   value={eventStart}
                   onChange={(e) => setEventStart(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 font-mono shadow-2xs"
                 />
-                <span className="text-[11px] text-slate-500">Waktu acara resmi dibuka</span>
+                <div className="text-[11px] text-slate-500 flex items-center justify-between">
+                  <span>Waktu acara resmi dibuka (tampil di publik)</span>
+                  {eventStart && (
+                    <span className="text-blue-800 font-bold">
+                      {formatReadableDate(eventStart.split("T")[0])}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  3. Selesai Acara Resmi *
-                </label>
+              {/* 3. Selesai Acara Resmi */}
+              <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>3. Selesai Acara Resmi *</span>
+                  </label>
+                  {/* Tooltip Icon */}
+                  <div className="relative group cursor-pointer inline-flex items-center">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 hover:bg-blue-200 text-blue-800 flex items-center justify-center text-xs font-bold transition">
+                      ?
+                    </span>
+                    <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl z-20 pointer-events-none leading-relaxed border border-slate-800">
+                      <strong className="block text-blue-300 font-extrabold mb-1">Selesai Acara Resmi:</strong>
+                      Waktu penutupan kegiatan utama dan peserta meninggalkan ruangan. Jam ini yang <strong>didisplay di portal publik</strong> sebagai batas akhir kegiatan.
+                    </div>
+                  </div>
+                </div>
+
                 <input
                   type="datetime-local"
                   required
                   min={`${minDate}T00:00`}
                   value={eventEnd}
                   onChange={(e) => setEventEnd(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-600 font-mono shadow-2xs"
                 />
-                <span className="text-[11px] text-slate-500">Waktu acara resmi selesai</span>
+                <div className="text-[11px] text-slate-500 flex items-center justify-between">
+                  <span>Waktu acara resmi ditutup</span>
+                  {eventEnd && (
+                    <span className="text-blue-800 font-bold">
+                      {formatReadableDate(eventEnd.split("T")[0])}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  4. Selesai Penggunaan Fasilitas *
-                </label>
+              {/* 4. Selesai Penggunaan Fasilitas */}
+              <div className="bg-slate-50/60 p-3.5 rounded-xl border border-slate-200 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                    <span>4. Selesai Penggunaan Fasilitas *</span>
+                  </label>
+                  {/* Tooltip Icon */}
+                  <div className="relative group cursor-pointer inline-flex items-center">
+                    <span className="w-5 h-5 rounded-full bg-purple-100 hover:bg-purple-200 text-purple-800 flex items-center justify-center text-xs font-bold transition">
+                      ?
+                    </span>
+                    <div className="absolute right-0 bottom-full mb-2 hidden group-hover:block w-64 p-3 bg-slate-900 text-white text-[11px] rounded-xl shadow-xl z-20 pointer-events-none leading-relaxed border border-slate-800">
+                      <strong className="block text-amber-300 font-extrabold mb-1">Selesai Penggunaan Fasilitas:</strong>
+                      Waktu akhir setelah selesai bersih-bersih (clear area), pengembalian perlengkapan/inventaris, dan penyerahan kunci ke satpam (maks. 18:30 WIB).
+                    </div>
+                  </div>
+                </div>
+
                 <input
                   type="datetime-local"
                   required
                   min={`${minDate}T00:00`}
                   value={usageEnd}
                   onChange={(e) => setUsageEnd(e.target.value)}
-                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 font-mono"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-purple-600 font-mono shadow-2xs"
                 />
-                <span className="text-[11px] text-slate-500">Bersih-bersih & serah kunci (maks. 18:30 WIB)</span>
+                <div className="text-[11px] text-slate-500 flex items-center justify-between">
+                  <span>Bersih-bersih & serah kunci (maks. 18:30 WIB)</span>
+                  {usageEnd && (
+                    <span className="text-purple-800 font-bold">
+                      {formatReadableDate(usageEnd.split("T")[0])}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 
