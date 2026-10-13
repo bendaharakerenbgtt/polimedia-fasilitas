@@ -34,7 +34,7 @@ export default async function DashboardOverviewPage() {
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
     JOIN organizations o ON o.id = b.organization_id
-    WHERE ${pred}
+    WHERE ${pred} AND b.archived_at IS NULL
     ORDER BY b.created_at DESC
     LIMIT 50`,
     params
@@ -477,14 +477,6 @@ export default async function DashboardOverviewPage() {
                       Seluruh permohonan fasilitas yang diajukan oleh akun organisasi Anda ({ownBookings.length})
                     </p>
                   </div>
-                  {ownBookings.length > 0 && (
-                    <Link
-                      href="/dashboard/peminjaman/baru"
-                      className="text-xs font-semibold text-purple-700 hover:text-purple-900 bg-purple-50 px-3 py-1.5 rounded-lg border border-purple-200 transition"
-                    >
-                      + Ajukan Baru
-                    </Link>
-                  )}
                 </div>
                 {renderBookingTable(ownBookings, "Organisasi Anda belum mengajukan peminjaman fasilitas.", true)}
               </div>

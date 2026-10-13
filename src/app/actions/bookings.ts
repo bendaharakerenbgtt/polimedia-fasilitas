@@ -251,3 +251,41 @@ export async function decideChangeAction(
     return { error: err?.message || "Gagal memproses permohonan." };
   }
 }
+
+export async function archiveBookingAction(bookingId: string) {
+  const user = await requireUser();
+  try {
+    const { query } = await import("@/server/db");
+    // Tandai pengajuan sebagai diarsipkan
+    await query(
+      `UPDATE bookings SET archived_at = now() WHERE id = $1`,
+      [bookingId]
+    );
+    // Tandai notifikasi terkait booking ini sebagai terbaca
+    await query(
+      `UPDATE notifications SET read_at = now() WHERE user_id = $1 AND link = $2`,
+      [user.id, `/dashboard/peminjaman/${bookingId}`]
+    );
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/aktivitas");
+    revalidatePath(`/dashboard/peminjaman/${bookingId}`);
+    return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || "Gagal mengarsipkan pengajuan." };
+  }
+}
+
+export async function markNotificationReadAction(notificationId: string) {
+  const user = await requireUser();
+  try {
+    const { query } = await import("@/server/db");
+    await query(
+      `UPDATE notifications SET read_at = now() WHERE id = $1 AND user_id = $2`,
+      [notificationId, user.id]
+    );
+    revalidatePath("/dashboard");
+    return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || "Gagal menandai notifikasi." };
+  }
+}

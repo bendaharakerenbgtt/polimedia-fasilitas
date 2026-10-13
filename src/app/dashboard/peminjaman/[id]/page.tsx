@@ -8,6 +8,7 @@ import { BOOKING_STATUS_LABEL, STEP_STATUS_LABEL } from "@/lib/roles";
 import { fmtDateTime, fmtRange } from "@/lib/time";
 import BookingActionPanel from "./BookingActionPanel";
 import { getFacilityImage } from "@/lib/facilityImages";
+import MarkReadArchiveButton from "./MarkReadArchiveButton";
 
 export const dynamic = "force-dynamic";
 
@@ -168,6 +169,46 @@ export default async function BookingDetailPage({
           );
         })()}
 
+        {/* Banner Peminjaman Disetujui (ACC Resmi) & Status Pelaksanaan / Form SBA */}
+        {booking.status === "APPROVED" && (
+          <div className="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 sm:p-5 flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-lg shrink-0">
+              ✓
+            </div>
+            <div className="space-y-1.5 flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <h4 className="text-sm font-bold text-emerald-950">
+                  {new Date(booking.event_end) > new Date()
+                    ? "Pengajuan Peminjaman Disetujui Resmi (Terkonfirmasi)"
+                    : "Acara Telah Berlangsung — Formulir SBA Terbuka"}
+                </h4>
+                <span className="text-[10px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-200 text-emerald-900 w-fit">
+                  {new Date(booking.event_end) > new Date() ? "Menunggu Hari Pelaksanaan" : "Tahap Laporan SBA"}
+                </span>
+              </div>
+
+              {new Date(booking.event_end) > new Date() ? (
+                <p className="text-xs text-emerald-900 leading-relaxed">
+                  Pengajuan ini telah disetujui penuh oleh seluruh pihak berwenang dan jadwal telah dikunci resmi di kalender kampus. Pengajuan akan tetap berada di daftar pemantauan hingga hari acara selesai, lalu formulir Surat Bukti Acara (SBA) akan terbuka secara otomatis.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-xs text-emerald-900 leading-relaxed">
+                    Waktu acara telah selesai berlangsung. Organisasi pemohon sekarang dapat mengisi dan menyerahkan <strong>Surat Bukti Acara (SBA)</strong> untuk serah terima kondisi fasilitas dan barang inventaris.
+                  </p>
+                  <Link
+                    href={`/dashboard/sba/${booking.id}`}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-lg transition shadow-xs"
+                  >
+                    <span>📋</span>
+                    <span>{sbaReport ? `Buka Laporan SBA (${sbaReport.status}) →` : "Buka & Isi Formulir SBA Sekarang →"}</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Banner Permintaan Revisi */}
         {booking.status === "REVISION" && (
           <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4 sm:p-5 flex items-start gap-3.5">
@@ -218,16 +259,25 @@ export default async function BookingDetailPage({
 
         {/* Banner Penolakan */}
         {booking.status === "REJECTED" && (
-          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 sm:p-5 flex items-start gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg shrink-0">
-              ✕
+          <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 sm:p-5 flex flex-col gap-3">
+            <div className="flex items-start gap-3.5">
+              <div className="w-9 h-9 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg shrink-0">
+                ✕
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-rose-900">Pengajuan Peminjaman Ditolak</h4>
+                <p className="text-xs text-rose-800 leading-relaxed">
+                  <strong>Catatan / Alasan Penolakan:</strong> {booking.decision_note || "Tidak disetujui oleh pihak berwenang."}
+                </p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-rose-900">Pengajuan Peminjaman Ditolak</h4>
-              <p className="text-xs text-rose-800 leading-relaxed">
-                <strong>Catatan / Alasan Penolakan:</strong> {booking.decision_note || "Tidak disetujui oleh pihak berwenang."}
-              </p>
-            </div>
+
+            {isOwnerOrg && (
+              <MarkReadArchiveButton
+                bookingId={booking.id}
+                isArchived={Boolean(booking.archived_at)}
+              />
+            )}
           </div>
         )}
 

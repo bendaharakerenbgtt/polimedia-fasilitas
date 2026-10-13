@@ -24,8 +24,22 @@ function createPool() {
   return pool;
 }
 
+let schemaEnsured = false;
+async function ensureSchema(pool: Pool) {
+  if (schemaEnsured) return;
+  schemaEnsured = true;
+  try {
+    await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ DEFAULT NULL`);
+  } catch (err) {
+    console.warn("Could not alter bookings for archived_at:", err);
+  }
+}
+
 export function getPool(): Pool {
-  if (!globalThis.__pgPool) globalThis.__pgPool = createPool();
+  if (!globalThis.__pgPool) {
+    globalThis.__pgPool = createPool();
+    ensureSchema(globalThis.__pgPool);
+  }
   return globalThis.__pgPool;
 }
 
