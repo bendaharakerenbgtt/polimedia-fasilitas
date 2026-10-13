@@ -127,9 +127,20 @@ export default function NewBookingForm({
     return [...standardLoaded, ...customLoaded];
   });
 
-  // State input untuk menambah barang baru kustom
+  // State input untuk menambah barang baru tambahan
   const [customItemName, setCustomItemName] = useState("");
   const [customItemQty, setCustomItemQty] = useState(1);
+  const [showCustomItemForm, setShowCustomItemForm] = useState(false);
+
+  // Toggle buka/tutup bagian Peserta Kegiatan (Opsional)
+  const [showParticipants, setShowParticipants] = useState<boolean>(() => {
+    return Array.isArray(initialBooking?.participants) && initialBooking.participants.length > 0;
+  });
+
+  // Toggle buka/tutup bagian Delegasi / Pihak Eksternal (Opsional)
+  const [showOtherParties, setShowOtherParties] = useState<boolean>(() => {
+    return Array.isArray(initialBooking?.other_parties) && initialBooking.other_parties.length > 0;
+  });
 
   // Handler pergantian fasilitas: otomatis sesuaikan daftar barang sesuai fasilitas yang dipilih
   function handleFacilityChange(newFacilityId: string) {
@@ -1143,75 +1154,111 @@ export default function NewBookingForm({
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Cantumkan nama lengkap peserta kegiatan, NIM, Program Studi, serta delegasi / asal utusan (kelas/organisasi).
+                    {showParticipants
+                      ? "Cantumkan nama lengkap peserta kegiatan, NIM, Program Studi, serta delegasi / asal utusan."
+                      : "Daftar peserta kegiatan bersifat opsional. Klik tombol di kanan jika kegiatan Anda memerlukan daftar peserta."}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={addParticipantMember}
-                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
-                >
-                  + Tambah Peserta
-                </button>
+                {!showParticipants ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowParticipants(true);
+                      if (participantsList.length === 0) {
+                        setParticipantsList([{ name: "", nim: "", prodi: "", delegation: "" }]);
+                      }
+                    }}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+                  >
+                    + Buka / Tambah Peserta
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={addParticipantMember}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                    >
+                      + Tambah Baris
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowParticipants(false);
+                        setParticipantsList([]);
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-lg text-xs font-medium transition cursor-pointer"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-2.5">
-                {participantsList.map((participant, idx) => (
-                  <div
-                    key={idx}
-                    className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50/60 p-3 rounded-xl border border-slate-200 items-center hover:bg-slate-50 transition"
-                  >
-                    <div className="sm:col-span-4">
-                      <input
-                        type="text"
-                        placeholder="Nama Lengkap Peserta"
-                        value={participant.name}
-                        onChange={(e) => updateParticipant(idx, "name", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <input
-                        type="text"
-                        placeholder="NIM"
-                        value={participant.nim}
-                        onChange={(e) => updateParticipant(idx, "nim", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="sm:col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Program Studi"
-                        value={participant.prodi || ""}
-                        onChange={(e) => updateParticipant(idx, "prodi", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <input
-                        type="text"
-                        placeholder="Delegasi / Utusan"
-                        value={participant.delegation}
-                        onChange={(e) => updateParticipant(idx, "delegation", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                    <div className="sm:col-span-1 text-right">
-                      {participantsList.length > 1 && (
+              {showParticipants && (
+                <div className="space-y-2.5 animate-in fade-in duration-150">
+                  {participantsList.map((participant, idx) => (
+                    <div
+                      key={idx}
+                      className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50/60 p-3 rounded-xl border border-slate-200 items-center hover:bg-slate-50 transition"
+                    >
+                      <div className="sm:col-span-4">
+                        <input
+                          type="text"
+                          placeholder="Nama Lengkap Peserta"
+                          value={participant.name}
+                          onChange={(e) => updateParticipant(idx, "name", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <input
+                          type="text"
+                          placeholder="NIM"
+                          value={participant.nim}
+                          onChange={(e) => updateParticipant(idx, "nim", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <input
+                          type="text"
+                          placeholder="Program Studi"
+                          value={participant.prodi || ""}
+                          onChange={(e) => updateParticipant(idx, "prodi", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <input
+                          type="text"
+                          placeholder="Delegasi / Utusan"
+                          value={participant.delegation}
+                          onChange={(e) => updateParticipant(idx, "delegation", e.target.value)}
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div className="sm:col-span-1 text-right">
                         <button
                           type="button"
-                          onClick={() => removeParticipantMember(idx)}
+                          onClick={() => {
+                            if (participantsList.length === 1) {
+                              setShowParticipants(false);
+                              setParticipantsList([]);
+                            } else {
+                              removeParticipantMember(idx);
+                            }
+                          }}
                           className="w-7 h-7 rounded-lg text-rose-600 hover:bg-rose-100 font-bold transition inline-flex items-center justify-center cursor-pointer"
                           title="Hapus baris peserta"
                         >
                           ✕
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* LAMPIRAN BARANG YANG DIBUTUHKAN & TAMBAH BARANG LAINNYA */}
@@ -1228,9 +1275,20 @@ export default function NewBookingForm({
                     Gunakan tombol (+ / -) untuk sarana ruangan, atau tambahkan barang sarana lainnya jika tidak ada di daftar.
                   </p>
                 </div>
-                <span className="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200 w-fit">
-                  {activeItemsToSubmit.length} barang dipilih
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200 w-fit">
+                    {activeItemsToSubmit.length} barang dipilih
+                  </span>
+                  {!showCustomItemForm && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomItemForm(true)}
+                      className="text-xs font-bold px-3 py-1 bg-slate-800 hover:bg-slate-900 text-white rounded-lg transition shadow-2xs cursor-pointer"
+                    >
+                      + Tambah Sarana Lainnya
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Grid Barang Standar & Tambahan */}
@@ -1321,46 +1379,57 @@ export default function NewBookingForm({
                 })}
               </div>
 
-              {/* Form Tambah Barang / Sarana Lainnya */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">📦</span>
-                  <span className="text-xs font-extrabold text-slate-800">
-                    Tambah Barang / Sarana Lainnya:
-                  </span>
-                </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                  <input
-                    type="text"
-                    placeholder="Nama barang sarana lainnya (e.g. Kabel Roll 20M, Mic Wireless, Podium, Flipchart...)"
-                    value={customItemName}
-                    onChange={(e) => setCustomItemName(e.target.value)}
-                    className="flex-1 px-3.5 py-2 bg-white text-slate-900 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500"
-                  />
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 bg-white px-2.5 py-1.5 border border-slate-300 rounded-xl">
-                      <span className="text-[11px] font-bold text-slate-600">Qty:</span>
-                      <input
-                        type="number"
-                        min="1"
-                        value={customItemQty}
-                        onChange={(e) => setCustomItemQty(Math.max(1, Number(e.target.value)))}
-                        className="w-12 text-center text-xs font-bold text-slate-900 outline-none"
-                      />
+              {/* Form Tambah Barang / Sarana Lainnya (Muncul Saat Dibutuhkan) */}
+              {showCustomItemForm && (
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 animate-in fade-in duration-150">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">📦</span>
+                      <span className="text-xs font-extrabold text-slate-800">
+                        Tambah Barang / Sarana Lainnya:
+                      </span>
                     </div>
                     <button
                       type="button"
-                      onClick={handleAddCustomItem}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+                      onClick={() => setShowCustomItemForm(false)}
+                      className="text-xs text-slate-500 hover:text-slate-800 font-medium"
                     >
-                      + Tambah Barang
+                      ✕ Tutup
                     </button>
                   </div>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                    <input
+                      type="text"
+                      placeholder="Nama barang sarana lainnya (e.g. Kabel Roll 20M, Mic Wireless, Podium, Flipchart...)"
+                      value={customItemName}
+                      onChange={(e) => setCustomItemName(e.target.value)}
+                      className="flex-1 px-3.5 py-2 bg-white text-slate-900 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 bg-white px-2.5 py-1.5 border border-slate-300 rounded-xl">
+                        <span className="text-[11px] font-bold text-slate-600">Qty:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={customItemQty}
+                          onChange={(e) => setCustomItemQty(Math.max(1, Number(e.target.value)))}
+                          className="w-12 text-center text-xs font-bold text-slate-900 outline-none"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleAddCustomItem}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+                      >
+                        + Tambah Barang
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    Barang yang Anda tambahkan sendiri akan otomatis dimasukkan ke dalam daftar lampiran sarana peminjaman fasilitas.
+                  </p>
                 </div>
-                <p className="text-[11px] text-slate-500">
-                  Barang yang Anda tambahkan sendiri akan otomatis dimasukkan ke dalam daftar lampiran sarana peminjaman fasilitas.
-                </p>
-              </div>
+              )}
             </div>
 
             {/* SUSUNAN PANITIA PELAKSANA - WAJIB */}
@@ -1404,13 +1473,34 @@ export default function NewBookingForm({
                       />
                     </div>
                     <div className="sm:col-span-3">
-                      <input
-                        type="text"
-                        placeholder="Divisi / Bidang (Opsional)"
-                        value={member.division || ""}
-                        onChange={(e) => updateCommittee(idx, "division", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
-                      />
+                      {member.division ? (
+                        <div className="relative flex items-center">
+                          <input
+                            type="text"
+                            placeholder="Divisi / Bidang"
+                            value={member.division}
+                            onChange={(e) => updateCommittee(idx, "division", e.target.value)}
+                            className="w-full pl-3 pr-7 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => updateCommittee(idx, "division", "")}
+                            className="absolute right-2 text-slate-400 hover:text-rose-500 text-xs font-bold"
+                            title="Hapus divisi"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => updateCommittee(idx, "division", " ")}
+                          className="w-full py-2 px-3 border border-dashed border-slate-300 hover:border-blue-400 hover:bg-blue-50/50 text-slate-500 hover:text-blue-700 rounded-lg text-xs font-medium text-left transition flex items-center justify-between"
+                        >
+                          <span>+ Divisi / Bidang</span>
+                          <span className="text-[10px] text-slate-400">(opsional)</span>
+                        </button>
+                      )}
                     </div>
                     <div className="sm:col-span-2">
                       <input
@@ -1460,24 +1550,49 @@ export default function NewBookingForm({
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Bila kegiatan melibatkan pengisi acara eksternal, pemateri, juri lomba, atau perwakilan sponsor.
+                    {showOtherParties
+                      ? "Cantumkan pihak eksternal, pemateri, juri lomba, atau perwakilan sponsor."
+                      : "Bersifat opsional bila kegiatan Anda melibatkan pihak luar / pengisi acara eksternal."}
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={addOtherParty}
-                  className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
-                >
-                  + Tambah Delegasi
-                </button>
+                {!showOtherParties ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOtherParties(true);
+                      if (otherParties.length === 0) {
+                        setOtherParties([{ name: "", role: "", contact: "" }]);
+                      }
+                    }}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+                  >
+                    + Buka / Tambah Delegasi
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={addOtherParty}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition cursor-pointer"
+                    >
+                      + Tambah Baris
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowOtherParties(false);
+                        setOtherParties([]);
+                      }}
+                      className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-lg text-xs font-medium transition cursor-pointer"
+                    >
+                      Tutup
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {otherParties.length === 0 ? (
-                <div className="p-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
-                  Belum ada delegasi/pihak eksternal yang ditambahkan. Klik <strong>+ Tambah Delegasi</strong> bila kegiatan Anda melibatkan pihak luar.
-                </div>
-              ) : (
-                <div className="space-y-2.5">
+              {showOtherParties && (
+                <div className="space-y-2.5 animate-in fade-in duration-150">
                   {otherParties.map((party, idx) => (
                     <div
                       key={idx}
@@ -1486,7 +1601,7 @@ export default function NewBookingForm({
                       <div className="sm:col-span-4">
                         <input
                           type="text"
-                          placeholder="Nama Pihak / Instansi (Opsional)"
+                          placeholder="Nama Pihak / Instansi"
                           value={party.name}
                           onChange={(e) => updateOtherParty(idx, "name", e.target.value)}
                           className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
@@ -1513,7 +1628,14 @@ export default function NewBookingForm({
                       <div className="sm:col-span-1 text-right">
                         <button
                           type="button"
-                          onClick={() => removeOtherParty(idx)}
+                          onClick={() => {
+                            if (otherParties.length === 1) {
+                              setShowOtherParties(false);
+                              setOtherParties([]);
+                            } else {
+                              removeOtherParty(idx);
+                            }
+                          }}
                           className="w-7 h-7 rounded-lg text-rose-600 hover:bg-rose-100 font-bold transition inline-flex items-center justify-center cursor-pointer"
                           title="Hapus baris delegasi"
                         >
