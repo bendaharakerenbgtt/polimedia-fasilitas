@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { fmtDateTime, fmtRange, fmtTime } from "@/lib/time";
 import type { CampusCalendarEvent } from "@/server/bookings";
+import { getFacilityImage } from "@/lib/facilityImages";
 
 export default function CampusCalendarViewer({
   events,
@@ -378,6 +379,26 @@ export default function CampusCalendarViewer({
                 ✕
               </button>
             </div>
+
+            {/* Landscape Facility Preview Banner */}
+            {(() => {
+              const imgMeta = getFacilityImage(selectedEvent.facilityName);
+              return (
+                <div className="relative w-full h-36 sm:h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={imgMeta.imageUrl}
+                    alt={selectedEvent.facilityName}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute top-2.5 left-2.5">
+                    <span className="px-2.5 py-1 rounded-full bg-slate-950/70 backdrop-blur-xs text-[10px] font-extrabold text-amber-300 border border-amber-400/30">
+                      🏛️ {selectedEvent.facilityName}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="space-y-3.5 text-xs">
               <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">

@@ -9,6 +9,7 @@ import { getCampusCalendarEvents } from "@/server/bookings";
 import CampusCalendarViewer from "./kalender/CampusCalendarViewer";
 import CompactNotifications from "./CompactNotifications";
 import DashboardTabSwitcher from "./DashboardTabSwitcher";
+import { getFacilityImage } from "@/lib/facilityImages";
 
 export const dynamic = "force-dynamic";
 
@@ -153,8 +154,21 @@ export default async function DashboardOverviewPage() {
                     <div className="font-semibold text-slate-900">{b.title || "(Draft formulir)"}</div>
                     <div className="text-xs text-slate-500">{b.org_name}</div>
                   </td>
-                  <td className="px-6 py-4 font-medium text-slate-800">
-                    {b.facility_name}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-900 shadow-2xs">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={getFacilityImage(b.facility_name).imageUrl}
+                          alt={b.facility_name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 truncate">{b.facility_name}</div>
+                        <div className="text-[11px] text-slate-500 truncate">{b.facility_location || "Kampus PoliMedia"}</div>
+                      </div>
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-xs text-slate-600">
                     {fmtRange(b.usage_start, b.usage_end)}

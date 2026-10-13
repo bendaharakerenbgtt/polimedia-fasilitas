@@ -9,6 +9,7 @@ import {
   deleteFacilityAction,
 } from "@/app/actions/admin";
 import type { FacilityData, FacilityItemData } from "@/server/admin";
+import { getFacilityImage } from "@/lib/facilityImages";
 
 interface EditableItem {
   id?: string;
@@ -270,11 +271,23 @@ export default function FacilityManager({
                 filteredFacilities.map((f) => (
                   <tr key={f.id} className="hover:bg-slate-50/80 transition">
                     <td className="px-6 py-4">
-                      <strong className="text-slate-900 block">{f.name}</strong>
-                      <span className="font-mono text-xs text-slate-500">{f.code}</span>
-                      {f.description && (
-                        <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{f.description}</p>
-                      )}
+                      <div className="flex items-center gap-3">
+                        <div className="w-16 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-900 shadow-2xs">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={getFacilityImage(f.name).imageUrl}
+                            alt={f.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <strong className="text-slate-900 block truncate">{f.name}</strong>
+                          <span className="font-mono text-xs text-slate-500">{f.code}</span>
+                          {f.description && (
+                            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{f.description}</p>
+                          )}
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="font-medium text-slate-800">{f.category}</div>

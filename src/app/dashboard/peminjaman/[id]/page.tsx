@@ -7,6 +7,7 @@ import { getSteps } from "@/server/approvals";
 import { BOOKING_STATUS_LABEL, STEP_STATUS_LABEL } from "@/lib/roles";
 import { fmtDateTime, fmtRange } from "@/lib/time";
 import BookingActionPanel from "./BookingActionPanel";
+import { getFacilityImage } from "@/lib/facilityImages";
 
 export const dynamic = "force-dynamic";
 
@@ -137,6 +138,32 @@ export default async function BookingDetailPage({
             )}
           </div>
         </div>
+
+        {/* Landscape Facility Banner */}
+        {(() => {
+          const imgMeta = getFacilityImage(booking.facility_name);
+          return (
+            <div className="relative w-full h-44 sm:h-56 rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 group shadow-2xs">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imgMeta.imageUrl}
+                alt={booking.facility_name}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent flex flex-col justify-end p-5">
+                <span className="w-fit px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                  🏛️ {imgMeta.badge}
+                </span>
+                <h3 className="text-white font-extrabold text-lg sm:text-xl">
+                  {booking.facility_name}
+                </h3>
+                <p className="text-slate-300 text-xs mt-0.5">
+                  📍 {booking.facility_location || "Politeknik Negeri Media Kreatif Jakarta"}
+                </p>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Banner Permintaan Revisi */}
         {booking.status === "REVISION" && (

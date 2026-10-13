@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2e1065" />
+      <stop offset="100%" stop-color="#4c1d95" />
+    </linearGradient>
+    <linearGradient id="cardOverlay" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a" stop-opacity="0.85" />
+      <stop offset="60%" stop-color="#0f172a" stop-opacity="0.2" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+    </linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1" stroke-opacity="0.07" />
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="450" fill="url(#bg)" />
+  <rect width="800" height="450" fill="url(#grid)" />
+
+  <!-- Geometric Decorative Shapes -->
+  <circle cx="720" cy="80" r="140" fill="#fbbf24" fill-opacity="0.15" />
+  <circle cx="100" cy="380" r="90" fill="white" fill-opacity="0.05" />
+  <path d="M-20 220 L300 120 L350 320 Z" fill="white" fill-opacity="0.03" />
+  <path d="M500 450 L750 250 L850 450 Z" fill="#fbbf24" fill-opacity="0.08" />
+
+  <!-- Architectural Frame Representation -->
+  <g transform="translate(250, 70)" stroke="white" stroke-width="2" stroke-opacity="0.3" fill="none">
+    <rect x="0" y="40" width="300" height="180" rx="8" />
+    <line x1="0" y1="100" x2="300" y2="100" />
+    <line x1="100" y1="40" x2="100" y2="220" />
+    <line x1="200" y1="40" x2="200" y2="220" />
+    <!-- Pillars / Ceiling -->
+    <path d="M-20 40 L150 -20 L320 40" stroke-width="3" stroke="#fbbf24" stroke-opacity="0.6" />
+  </g>
+
+  <!-- Bottom Gradient Shadow -->
+  <rect width="800" height="450" fill="url(#cardOverlay)" />
+
+  <!-- Badge / Tag -->
+  <g transform="translate(48, 48)">
+    <rect width="150" height="32" rx="16" fill="white" fill-opacity="0.15" stroke="white" stroke-opacity="0.3" />
+    <circle cx="18" cy="16" r="6" fill="#fbbf24" />
+    <text x="34" y="21" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" letter-spacing="1.5">AULA KAMPUS</text>
+  </g>
+
+  <!-- Watermark PoliMedia -->
+  <g transform="translate(640, 48)">
+    <rect width="112" height="28" rx="6" fill="#fbbf24" fill-opacity="0.2" stroke="#fbbf24" stroke-opacity="0.4" />
+    <text x="56" y="18" text-anchor="middle" font-family="sans-serif" font-size="11" font-weight="900" fill="#fbbf24">POLIMEDIA</text>
+  </g>
+
+  <!-- Content / Info -->
+  <g transform="translate(48, 350)">
+    <text x="0" y="0" font-family="sans-serif" font-size="28" font-weight="800" fill="white">Aula Utama PoliMedia</text>
+    <text x="0" y="26" font-family="sans-serif" font-size="14" font-weight="500" fill="#e2e8f0">Gedung B Lantai 3 • Kapasitas Besar • Acara Akbar & Seminar</text>
+    <text x="0" y="50" font-family="sans-serif" font-size="11" font-weight="400" fill="#94a3b8">Fasilitas Resmi Politeknik Negeri Media Kreatif Jakarta • Siap Dipinjam</text>
+  </g>
+</svg>

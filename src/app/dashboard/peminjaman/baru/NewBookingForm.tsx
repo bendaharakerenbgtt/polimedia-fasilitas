@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createBookingDraftAction, updateBookingDraftAction } from "@/app/actions/bookings";
 import { fmtDateTime, fmtRange, fmtTime, toLocalInput, isWithinOperationalHours, OPERATIONAL_START_TIME, OPERATIONAL_END_TIME } from "@/lib/time";
 import type { BookedSlotInfo } from "@/server/bookings";
+import { getFacilityImage } from "@/lib/facilityImages";
 
 interface InventoryItemState {
   name: string;
@@ -423,6 +424,29 @@ export default function NewBookingForm({
                   </option>
                 ))}
               </select>
+
+              {/* Preview Landscape Foto Fasilitas Terpilih */}
+              {selectedFacilityObj && (
+                <div className="mt-3 relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 group h-40 sm:h-48 shadow-2xs">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getFacilityImage(selectedFacilityObj.name).imageUrl}
+                    alt={selectedFacilityObj.name}
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent flex flex-col justify-end p-4">
+                    <span className="w-fit px-2.5 py-0.5 rounded-full bg-amber-400 text-slate-950 text-[10px] font-extrabold uppercase tracking-wider mb-1">
+                      Fasilitas Terpilih
+                    </span>
+                    <h4 className="text-white font-extrabold text-base sm:text-lg">
+                      {selectedFacilityObj.name}
+                    </h4>
+                    <p className="text-slate-300 text-xs">
+                      📍 {selectedFacilityObj.location || selectedFacilityObj.category}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* DAFTAR KEGIATAN & JADWAL FASILITAS YANG DIPAKAI PIHAK LAIN */}
