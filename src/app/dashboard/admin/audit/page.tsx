@@ -31,7 +31,7 @@ export default async function AdminAuditPage() {
         </div>
       </div>
 
-      <AuditLogViewer logs={logs} />
+      <AuditLogViewer logs={logs} showRawJson={true} />
     </div>
   );
 }

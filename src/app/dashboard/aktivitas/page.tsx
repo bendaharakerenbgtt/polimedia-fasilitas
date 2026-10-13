@@ -203,9 +203,9 @@ export default async function UserHistoriPage() {
                       <td className="px-6 py-4 text-right">
                         <Link
                           href={`/dashboard/peminjaman/${b.id}`}
-                          className="text-xs font-bold text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3 py-1.5 rounded-lg transition"
+                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
                         >
-                          Lihat Lembar Arsip →
+                          Detail →
                         </Link>
                       </td>
                     </tr>

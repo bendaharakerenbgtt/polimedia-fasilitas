@@ -218,7 +218,13 @@ const ENTITY_LABEL: Record<string, string> = {
   sba_report: "Laporan SBA",
 };
 
-export default function AuditLogViewer({ logs }: { logs: AuditLogRow[] }) {
+export default function AuditLogViewer({
+  logs,
+  showRawJson = false,
+}: {
+  logs: AuditLogRow[];
+  showRawJson?: boolean;
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAction, setFilterAction] = useState("");
   const [expandedLogId, setExpandedLogId] = useState<string | null>(null);
@@ -285,13 +291,13 @@ export default function AuditLogViewer({ logs }: { logs: AuditLogRow[] }) {
                 <th className="px-6 py-3.5">Aktivitas / Aksi</th>
                 <th className="px-6 py-3.5">Pelaku (Aktor)</th>
                 <th className="px-6 py-3.5">Keterangan & Rincian</th>
-                <th className="px-6 py-3.5 text-right">Data Teknis</th>
+                {showRawJson && <th className="px-6 py-3.5 text-right">Data Teknis</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs">
               {filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-xs text-slate-400">
+                  <td colSpan={showRawJson ? 5 : 4} className="px-6 py-12 text-center text-xs text-slate-400">
                     Tidak ada catatan log yang cocok dengan filter pencarian.
                   </td>
                 </tr>
@@ -381,23 +387,25 @@ export default function AuditLogViewer({ logs }: { logs: AuditLogRow[] }) {
                         )}
                       </td>
 
-                      <td className="px-6 py-4 text-right whitespace-nowrap">
-                        <button
-                          onClick={() => setExpandedLogId(isExpanded ? null : l.id)}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition shadow-2xs"
-                        >
-                          {isExpanded ? "Tutup JSON ▲" : "Lihat JSON ▼"}
-                        </button>
+                        {showRawJson && (
+                          <td className="px-6 py-4 text-right whitespace-nowrap">
+                            <button
+                              onClick={() => setExpandedLogId(isExpanded ? null : l.id)}
+                              className="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition shadow-2xs"
+                            >
+                              {isExpanded ? "Tutup JSON ▲" : "Lihat JSON ▼"}
+                            </button>
 
-                        {isExpanded && (
-                          <div className="mt-3 text-left">
-                            <pre className="bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-800 text-[11px] font-mono overflow-x-auto max-h-48 whitespace-pre-wrap">
-                              {JSON.stringify(l.data, null, 2)}
-                            </pre>
-                          </div>
+                            {isExpanded && (
+                              <div className="mt-3 text-left">
+                                <pre className="bg-slate-900 text-slate-100 p-3 rounded-xl border border-slate-800 text-[11px] font-mono overflow-x-auto max-h-48 whitespace-pre-wrap">
+                                  {JSON.stringify(l.data, null, 2)}
+                                </pre>
+                              </div>
+                            )}
+                          </td>
                         )}
-                      </td>
-                    </tr>
+                      </tr>
                   );
                 })
               )}
