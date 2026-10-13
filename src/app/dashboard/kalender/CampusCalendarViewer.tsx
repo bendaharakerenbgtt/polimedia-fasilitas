@@ -452,17 +452,11 @@ export default function CampusCalendarViewer({
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
-              <Link
-                href={`/dashboard/peminjaman/${selectedEvent.id}`}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition"
-              >
-                Buka Lembar Pengajuan Lengkap →
-              </Link>
+            <div className="flex justify-end pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs transition cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer text-center"
               >
                 Tutup
               </button>
