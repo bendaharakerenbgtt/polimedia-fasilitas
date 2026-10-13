@@ -7,7 +7,7 @@ import CampusCalendarViewer from "./CampusCalendarViewer";
 export const dynamic = "force-dynamic";
 
 export default async function CampusCalendarPage() {
-  await requireUser();
+  const user = await requireUser();
 
   const [events, facilities] = await Promise.all([
     getCampusCalendarEvents(),
@@ -38,7 +38,7 @@ export default async function CampusCalendarPage() {
         </div>
       </div>
 
-      <CampusCalendarViewer events={events} facilities={facilities} />
+      <CampusCalendarViewer events={events} facilities={facilities} userRole={user.role} />
     </div>
   );
 }

@@ -5,18 +5,24 @@ import Link from "next/link";
 import { fmtDateTime, fmtRange, fmtTime } from "@/lib/time";
 import type { CampusCalendarEvent } from "@/server/bookings";
 import { getFacilityImage } from "@/lib/facilityImages";
+import type { Role } from "@/lib/roles";
 
 export default function CampusCalendarViewer({
   events,
   facilities,
+  userRole,
 }: {
   events: CampusCalendarEvent[];
   facilities: { id: string; name: string; category: string }[];
+  userRole?: Role;
 }) {
   const [viewMode, setViewMode] = useState<"MONTH" | "LIST">("MONTH");
   const [selectedFacilityId, setSelectedFacilityId] = useState<string>("ALL");
   const [selectedOrgType, setSelectedOrgType] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState<string>("");
+
+  // Wadir, Subbag Umum, dan Admin berhak melihat detail lembar formulir pengajuan langsung dari kalender
+  const canViewDetail = userRole === "WADIR" || userRole === "SUBBAG_UMUM" || userRole === "ADMIN";
 
   // Bulan aktif kalender: Default adalah bulan ini
   const today = new Date();
@@ -397,14 +403,26 @@ export default function CampusCalendarViewer({
                   Oleh: {selectedEvent.orgName}
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setSelectedEvent(null)}
-                className="w-8 h-8 rounded-full bg-white/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-base transition cursor-pointer shadow-2xs shrink-0"
-                title="Tutup"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {canViewDetail && (
+                  <Link
+                    href={`/dashboard/peminjaman/${selectedEvent.id}`}
+                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                    title="Buka Formulir Pengajuan"
+                  >
+                    <span>📋 Buka Formulir</span>
+                    <span>→</span>
+                  </Link>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedEvent(null)}
+                  className="w-8 h-8 rounded-full bg-white/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-base transition cursor-pointer shadow-2xs shrink-0"
+                  title="Tutup"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
 
             {/* Modal Body (Scrollable) */}
@@ -483,11 +501,25 @@ export default function CampusCalendarViewer({
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+            <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+              {canViewDetail ? (
+                <Link
+                  href={`/dashboard/peminjaman/${selectedEvent.id}`}
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition shadow-xs"
+                >
+                  <span>📋</span>
+                  <span>Buka Lembar Formulir Pengajuan Lengkap</span>
+                  <span className="text-blue-200">→</span>
+                </Link>
+              ) : (
+                <div className="text-[11px] text-slate-400 italic">
+                  Kode Pengajuan: #{selectedEvent.code}
+                </div>
+              )}
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                className="w-full sm:w-auto px-6 py-2.5 bg-purple-800 hover:bg-purple-900 text-amber-300 rounded-xl font-bold text-xs transition cursor-pointer text-center shadow-xs"
+                className="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-xl font-bold text-xs transition cursor-pointer text-center shadow-2xs"
               >
                 Tutup Jendela
               </button>
