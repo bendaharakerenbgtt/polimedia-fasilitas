@@ -82,30 +82,17 @@ export default async function BookingDetailPage({
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      {/* Breadcrumb & Navigation */}
-      <div className="flex items-center justify-between">
-        <Link
-          href="/dashboard"
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition shadow-2xs"
-        >
-          <span>←</span>
-          <span>Kembali ke Dashboard</span>
-        </Link>
-        <div className="text-right">
-          <span className="text-[11px] text-slate-500 block">Dibuat:</span>
-          <span className="text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200">
-            {fmtDateTime(booking.created_at)}
-          </span>
-        </div>
-      </div>
-
       {/* Main Header Card */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
                 {booking.org_name} ({booking.org_type})
+              </span>
+              <span className="text-slate-300">•</span>
+              <span className="text-xs text-slate-500">
+                Diajukan: <strong className="text-slate-700">{fmtDateTime(booking.created_at)}</strong>
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">

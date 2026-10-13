@@ -51,15 +51,6 @@ export default async function UserHistoriPage() {
       {/* Header Banner Halaman Histori */}
       <div className="bg-gradient-to-r from-purple-950 via-[#3b0764] to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-md border border-purple-800/40 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="flex items-center gap-2 mb-2">
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold text-amber-300 bg-white/10 hover:bg-white/20 border border-white/20 transition"
-            >
-              <span>←</span>
-              <span>Kembali ke Beranda</span>
-            </Link>
-          </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Histori & Arsip Pengajuan
           </h2>
@@ -200,12 +191,13 @@ export default async function UserHistoriPage() {
                         )}
                       </td>
 
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right whitespace-nowrap">
                         <Link
                           href={`/dashboard/peminjaman/${b.id}`}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 hover:underline px-2.5 py-1 rounded-md hover:bg-blue-50 transition"
                         >
-                          Detail →
+                          <span>Detail</span>
+                          <span>→</span>
                         </Link>
                       </td>
                     </tr>
