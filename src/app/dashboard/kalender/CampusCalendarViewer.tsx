@@ -26,6 +26,9 @@ export default function CampusCalendarViewer({
   // Modal Detail Acara
   const [selectedEvent, setSelectedEvent] = useState<CampusCalendarEvent | null>(null);
 
+  // Modal Popover Agenda Harian (jika tanggal memiliki banyak acara)
+  const [selectedDayEvents, setSelectedDayEvents] = useState<{ dateStr: string; dayNumber: number; events: CampusCalendarEvent[] } | null>(null);
+
   // Filter events
   const filteredEvents = events.filter((ev) => {
     const matchFacility = selectedFacilityId === "ALL" || ev.facilityId === selectedFacilityId;
@@ -258,8 +261,8 @@ export default function CampusCalendarViewer({
                   </div>
 
                   {/* List Event di Tanggal Ini */}
-                  <div className="space-y-1 overflow-y-auto max-h-20 pr-0.5">
-                    {dayEvents.map((ev) => (
+                  <div className="space-y-1 mt-auto">
+                    {dayEvents.slice(0, 2).map((ev) => (
                       <button
                         key={ev.id}
                         onClick={() => setSelectedEvent(ev)}
@@ -278,6 +281,21 @@ export default function CampusCalendarViewer({
                         </div>
                       </button>
                     ))}
+
+                    {/* Jika lebih dari 2 acara, tampilkan badge +X acara lainnya */}
+                    {dayEvents.length > 2 && (
+                      <button
+                        onClick={() => setSelectedDayEvents({
+                          dateStr: item.dateStr,
+                          dayNumber: item.dayNumber!,
+                          events: dayEvents,
+                        })}
+                        className="w-full text-center py-1 px-1.5 rounded-md bg-purple-50 hover:bg-purple-100 border border-purple-200 text-[10px] font-extrabold text-purple-900 transition cursor-pointer"
+                        title="Klik untuk melihat semua agenda di hari ini"
+                      >
+                        +{dayEvents.length - 2} acara lainnya
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -472,6 +490,90 @@ export default function CampusCalendarViewer({
                 className="w-full sm:w-auto px-6 py-2.5 bg-purple-800 hover:bg-purple-900 text-amber-300 rounded-xl font-bold text-xs transition cursor-pointer text-center shadow-xs"
               >
                 Tutup Jendela
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Daftar Seluruh Acara di Tanggal Terpilih (Jika 3 atau lebih acara) */}
+      {selectedDayEvents && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+          onClick={() => setSelectedDayEvents(null)}
+        >
+          <div
+            className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-purple-50/70 to-amber-50/40">
+              <div>
+                <span className="text-[10px] font-extrabold text-purple-800 uppercase tracking-wider block">
+                  Agenda Tanggal {selectedDayEvents.dayNumber} {monthNames[currentMonth]} {currentYear}
+                </span>
+                <h4 className="text-base font-extrabold text-slate-900">
+                  Total {selectedDayEvents.events.length} Peminjaman Fasilitas
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDayEvents(null)}
+                className="w-8 h-8 rounded-full bg-white hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-sm transition cursor-pointer shadow-2xs"
+                title="Tutup"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* List Acara di Hari Ini */}
+            <div className="p-5 space-y-2.5 overflow-y-auto divide-y divide-slate-100">
+              {selectedDayEvents.events.map((ev) => (
+                <div
+                  key={ev.id}
+                  onClick={() => {
+                    setSelectedDayEvents(null);
+                    setSelectedEvent(ev);
+                  }}
+                  className="pt-2.5 first:pt-0 p-3 rounded-xl hover:bg-purple-50/60 transition cursor-pointer border border-transparent hover:border-purple-200"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span
+                      className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border uppercase ${
+                        ev.status === "APPROVED"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : ev.status === "PENDING"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-slate-100 text-slate-600 border-slate-200"
+                      }`}
+                    >
+                      {ev.status === "APPROVED" ? "Disetujui" : ev.status === "PENDING" ? "Sedang Dicek" : "Selesai"}
+                    </span>
+                    <span className="text-[11px] font-bold text-purple-900">
+                      ⏰ {fmtTime(ev.eventStart)} - {fmtTime(ev.eventEnd)}
+                    </span>
+                  </div>
+
+                  <h5 className="text-sm font-extrabold text-slate-900 leading-snug">
+                    {ev.title}
+                  </h5>
+
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
+                    <span className="font-semibold text-purple-800">👥 {ev.orgName}</span>
+                    <span>🏛️ {ev.facilityName}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedDayEvents(null)}
+                className="w-full sm:w-auto px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer"
+              >
+                Tutup
               </button>
             </div>
           </div>
