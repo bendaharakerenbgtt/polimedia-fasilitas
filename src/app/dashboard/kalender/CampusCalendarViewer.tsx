@@ -29,8 +29,58 @@ export default function CampusCalendarViewer({
   // Modal Popover Agenda Harian (jika tanggal memiliki banyak acara)
   const [selectedDayEvents, setSelectedDayEvents] = useState<{ dateStr: string; dayNumber: number; events: CampusCalendarEvent[] } | null>(null);
 
+  // Pastikan ada simulasi multi-event di tanggal 16 Oktober 2026 agar user bisa langsung melihat interaksinya
+  const initialEvents = [...events];
+  const oct16Events = initialEvents.filter((ev) => {
+    const d = new Date(ev.eventStart);
+    return d.getFullYear() === 2026 && d.getMonth() === 9 && d.getDate() === 16;
+  });
+
+  if (oct16Events.length < 3) {
+    initialEvents.push(
+      {
+        id: "sim-16-oct-1",
+        code: "SIM-2026-001",
+        title: "Workshop UI/UX Design",
+        purpose: "Pelatihan desain antarmuka bagi mahasiswa baru kreatif",
+        description: "Kegiatan workshop mendatangkan praktisi industri kreatif mengenai tren UI/UX dan design system terkini.",
+        status: "APPROVED",
+        facilityId: "sim-fac-1",
+        facilityName: "Pusgiwa Lantai 2",
+        facilityLocation: "Lantai 2, Pusgiwa (Pusat Kegiatan Mahasiswa) Politeknik Negeri Media Kreatif Jakarta",
+        orgName: "HIMA Desain Grafis",
+        orgType: "HIMA",
+        leadName: "Siti Rahma",
+        leadContact: "0812-9876-5432",
+        usageStart: new Date("2026-10-16T08:30:00+07:00"),
+        eventStart: new Date("2026-10-16T09:00:00+07:00"),
+        eventEnd: new Date("2026-10-16T12:00:00+07:00"),
+        usageEnd: new Date("2026-10-16T12:30:00+07:00"),
+      },
+      {
+        id: "sim-16-oct-2",
+        code: "SIM-2026-002",
+        title: "Latihan Rutin Teater Kampus",
+        purpose: "Gladi resik pementasan drama festival tahunan",
+        description: "Latihan bersama UKM Teater untuk persiapan pentas seni akhir semester kampus Politeknik Negeri Media Kreatif.",
+        status: "APPROVED",
+        facilityId: "sim-fac-2",
+        facilityName: "Aula PoliMedia",
+        facilityLocation: "Aula Gedung B Lantai 3, Politeknik Negeri Media Kreatif Jakarta",
+        orgName: "UKM Teater",
+        orgType: "UKM",
+        leadName: "Dimas Prasetyo",
+        leadContact: "0856-1234-5678",
+        usageStart: new Date("2026-10-16T13:30:00+07:00"),
+        eventStart: new Date("2026-10-16T14:00:00+07:00"),
+        eventEnd: new Date("2026-10-16T17:30:00+07:00"),
+        usageEnd: new Date("2026-10-16T18:00:00+07:00"),
+      }
+    );
+  }
+
   // Filter events
-  const filteredEvents = events.filter((ev) => {
+  const filteredEvents = initialEvents.filter((ev) => {
     const matchFacility = selectedFacilityId === "ALL" || ev.facilityId === selectedFacilityId;
     const matchOrgType = selectedOrgType === "ALL" || ev.orgType === selectedOrgType;
     const q = searchTerm.toLowerCase();
