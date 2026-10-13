@@ -43,7 +43,7 @@ export default async function DashboardLayout({
                 Beranda
               </Link>
               <Link
-                href="/dashboard#daftar-pengajuan"
+                href="/dashboard?tab=pengajuan#daftar-pengajuan"
                 className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition font-semibold"
               >
                 Daftar Pengajuan

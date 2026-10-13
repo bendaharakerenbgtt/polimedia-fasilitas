@@ -21,24 +21,57 @@ export default function DashboardTabSwitcher({
   const [activeTab, setActiveTab] = useState<"bookings" | "calendar">("bookings");
 
   useEffect(() => {
-    // Sinkronisasi dengan URL hash: jika user klik "Daftar Pengajuan" di header
-    if (window.location.hash === "#daftar-pengajuan") {
-      setActiveTab("bookings");
-    } else if (window.location.hash === "#kalender") {
-      setActiveTab("calendar");
-    }
-
-    const handleHashChange = () => {
-      if (window.location.hash === "#daftar-pengajuan") {
-        setActiveTab("bookings");
-      } else if (window.location.hash === "#kalender") {
+    // 1. Cek kondisi awal saat halaman dimuat
+    const checkUrl = () => {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      if (hash.includes("kalender") || search.includes("tab=kalender")) {
         setActiveTab("calendar");
+      } else if (hash.includes("daftar-pengajuan") || search.includes("tab=pengajuan")) {
+        setActiveTab("bookings");
+      }
+    };
+    checkUrl();
+
+    // 2. Dengarkan event hashchange & popstate
+    window.addEventListener("hashchange", checkUrl);
+    window.addEventListener("popstate", checkUrl);
+
+    // 3. Global Click Interceptor: Menjamin klik pada tombol "Daftar Pengajuan" di navbar selalu mengaktifkan tab
+    const handleGlobalClick = (e: MouseEvent) => {
+      const link = (e.target as HTMLElement)?.closest("a");
+      if (!link) return;
+      const href = link.getAttribute("href") || "";
+      
+      if (href.includes("daftar-pengajuan") || href.includes("tab=pengajuan")) {
+        setActiveTab("bookings");
+        // Beri jeda sangat singkat agar DOM tab pengajuan ter-render sebelum scroll
+        setTimeout(() => {
+          const el = document.getElementById("daftar-pengajuan");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 50);
       }
     };
 
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    document.addEventListener("click", handleGlobalClick);
+
+    return () => {
+      window.removeEventListener("hashchange", checkUrl);
+      window.removeEventListener("popstate", checkUrl);
+      document.removeEventListener("click", handleGlobalClick);
+    };
   }, []);
+
+  const switchTab = (tab: "bookings" | "calendar") => {
+    setActiveTab(tab);
+    if (tab === "calendar") {
+      window.history.replaceState(null, "", "#kalender");
+    } else {
+      window.history.replaceState(null, "", "#daftar-pengajuan");
+    }
+  };
 
   return (
     <div className="space-y-5">
@@ -47,7 +80,7 @@ export default function DashboardTabSwitcher({
         <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold w-fit">
           <button
             type="button"
-            onClick={() => setActiveTab("bookings")}
+            onClick={() => switchTab("bookings")}
             className={`px-4 py-2 rounded-lg transition cursor-pointer flex items-center gap-2 ${
               activeTab === "bookings"
                 ? "bg-white text-purple-950 shadow-xs border border-slate-200 font-extrabold"
@@ -69,7 +102,7 @@ export default function DashboardTabSwitcher({
 
           <button
             type="button"
-            onClick={() => setActiveTab("calendar")}
+            onClick={() => switchTab("calendar")}
             className={`px-4 py-2 rounded-lg transition cursor-pointer flex items-center gap-2 ${
               activeTab === "calendar"
                 ? "bg-white text-purple-950 shadow-xs border border-slate-200 font-extrabold"
