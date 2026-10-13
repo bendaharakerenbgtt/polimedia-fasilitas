@@ -57,7 +57,18 @@ export const bookingDetailsSchema = z.object({
   chairContact: phone,
   leadName: str(150).default(""),
   leadContact: phone.default(""),
-  participants: str(5000).default(""),
+  participants: z
+    .union([
+      str(5000),
+      z.array(
+        z.object({
+          name: str(150).default(""),
+          nim: str(50).default(""),
+          delegation: str(150).default(""),
+        })
+      ),
+    ])
+    .default([]),
   otherParties: z
     .array(z.object({ name: str(150).default(""), role: str(150).default(""), contact: phone.default("") }))
     .max(30)

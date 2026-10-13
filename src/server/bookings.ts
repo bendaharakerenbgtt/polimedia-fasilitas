@@ -103,7 +103,9 @@ export async function createBookingDraft(
         JSON.stringify(d.otherParties ?? []),
         JSON.stringify(d.committee ?? []),
         JSON.stringify(d.rundown ?? []),
-        d.specialNotes || (d.participants ? `Peserta Kegiatan: ${d.participants}` : ""),
+        d.specialNotes || (Array.isArray(d.participants) && d.participants.length > 0
+          ? `Peserta Kegiatan:\n${d.participants.map((p: any) => `- ${p.name || "Peserta"} (NIM: ${p.nim || "-"}) [Delegasi: ${p.delegation || "-"}]`).join("\n")}`
+          : (typeof d.participants === "string" && d.participants ? `Peserta Kegiatan: ${d.participants}` : "")),
         actor.id,
       ],
       client
@@ -243,7 +245,9 @@ export async function updateBookingDraft(
         d.otherParties ? JSON.stringify(d.otherParties) : null,
         d.committee ? JSON.stringify(d.committee) : null,
         d.rundown ? JSON.stringify(d.rundown) : null,
-        d.specialNotes || (d.participants ? `Peserta Kegiatan: ${d.participants}` : null),
+        d.specialNotes || (Array.isArray(d.participants) && d.participants.length > 0
+          ? `Peserta Kegiatan:\n${d.participants.map((p: any) => `- ${p.name || "Peserta"} (NIM: ${p.nim || "-"}) [Delegasi: ${p.delegation || "-"}]`).join("\n")}`
+          : (typeof d.participants === "string" && d.participants ? `Peserta Kegiatan: ${d.participants}` : null)),
       ],
       client
     );

@@ -38,10 +38,14 @@ export async function createBookingDraftAction(prevState: any, formData: FormDat
   const chairContact = String(formData.get("chairContact") ?? "").trim();
   const leadName = String(formData.get("leadName") ?? "").trim();
   const leadContact = String(formData.get("leadContact") ?? "").trim();
-  const participants = String(formData.get("participants") ?? "").trim();
   const specialNotes = String(formData.get("specialNotes") ?? "").trim();
+  // Parse items, committee, rundown, otherParties, participants
+  let participants: any = String(formData.get("participants") ?? "").trim();
+  try {
+    const rawPart = formData.get("participantsJson");
+    if (rawPart) participants = JSON.parse(String(rawPart));
+  } catch {}
 
-  // Parse items, committee, rundown, otherParties
   let items: any[] = [];
   try {
     const rawItems = formData.get("itemsJson");
@@ -124,10 +128,15 @@ export async function updateBookingDraftAction(bookingId: string, prevState: any
   const chairContact = String(formData.get("chairContact") ?? "").trim();
   const leadName = String(formData.get("leadName") ?? "").trim();
   const leadContact = String(formData.get("leadContact") ?? "").trim();
-  const participants = String(formData.get("participants") ?? "").trim();
+  // Parse items, committee, rundown, otherParties, participants
+  let participants: any = String(formData.get("participants") ?? "").trim();
+  try {
+    const rawPart = formData.get("participantsJson");
+    if (rawPart) participants = JSON.parse(String(rawPart));
+  } catch {}
+
   const specialNotes = String(formData.get("specialNotes") ?? "").trim();
 
-  // Parse items, committee, rundown, otherParties
   let items: any[] = [];
   try {
     const rawItems = formData.get("itemsJson");

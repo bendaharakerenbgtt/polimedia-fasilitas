@@ -493,6 +493,7 @@ export default async function BookingDetailPage({
                 <thead className="bg-slate-50 text-slate-600 font-semibold border-b">
                   <tr>
                     <th className="py-2 px-3">Nama Lengkap</th>
+                    <th className="py-2 px-3">Divisi / Seksi</th>
                     <th className="py-2 px-3">NIM</th>
                     <th className="py-2 px-3">Program Studi</th>
                   </tr>
@@ -501,6 +502,7 @@ export default async function BookingDetailPage({
                   {booking.committee.map((c: any, i: number) => (
                     <tr key={i}>
                       <td className="py-2 px-3 font-medium text-slate-800">{c.name}</td>
+                      <td className="py-2 px-3 text-slate-600 font-medium">{c.division || c.position || "-"}</td>
                       <td className="py-2 px-3 font-mono text-slate-600">{c.nim || "-"}</td>
                       <td className="py-2 px-3 text-slate-600">{c.prodi || "-"}</td>
                     </tr>

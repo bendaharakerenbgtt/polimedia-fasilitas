@@ -11,6 +11,13 @@ interface InventoryItemState {
   name: string;
   quantity: number;
   notes: string;
+  isCustom?: boolean;
+}
+
+interface ParticipantMemberState {
+  name: string;
+  nim: string;
+  delegation: string;
 }
 
 interface CommitteeMemberState {
@@ -72,48 +79,83 @@ export default function NewBookingForm({
   const [title, setTitle] = useState(initialBooking?.title ?? "");
   const [purpose, setPurpose] = useState(initialBooking?.purpose ?? "");
   const [description, setDescription] = useState(initialBooking?.description ?? "");
-  const [participants, setParticipants] = useState(initialBooking?.participants ?? "");
+
+  // Peserta Kegiatan (Nama, NIM, Delegasi / Asal Utusan) - Opsional
+  const [participantsList, setParticipantsList] = useState<ParticipantMemberState[]>(() => {
+    if (Array.isArray(initialBooking?.participants) && initialBooking.participants.length > 0) {
+      return initialBooking.participants.map((p: any) => ({
+        name: p.name || "",
+        nim: p.nim || "",
+        delegation: p.delegation || "",
+      }));
+    }
+    // Jika ada string tersimpan dari versi sebelumnya
+    if (typeof initialBooking?.participants === "string" && initialBooking.participants.trim()) {
+      return [{ name: initialBooking.participants, nim: "", delegation: "" }];
+    }
+    return [{ name: "", nim: "", delegation: "" }];
+  });
 
   // Inisialisasi daftar barang bawaan dari facilityItemsMap jika ada, atau standardItems
   const [inventoryItems, setInventoryItems] = useState<InventoryItemState[]>(() => {
     const fId = initialBooking?.facility_id;
     const baseList = (fId && facilityItemsMap[fId]) || standardItems.map((name) => ({ name, quantity: 0 }));
-    return baseList.map((it: any) => {
+    const baseNames = new Set(baseList.map((x: any) => x.name));
+
+    const standardLoaded = baseList.map((it: any) => {
       const existing = initialItems.find((x) => x.name === it.name);
       return {
         name: it.name,
         quantity: existing ? existing.quantity : 0,
         notes: existing?.notes || "",
+        isCustom: false,
       };
     });
+
+    // Custom items dari initialItems yang tidak ada di fasilitas standar
+    const customLoaded = initialItems
+      .filter((x) => !baseNames.has(x.name))
+      .map((it) => ({
+        name: it.name,
+        quantity: it.quantity,
+        notes: it.notes || "",
+        isCustom: true,
+      }));
+
+    return [...standardLoaded, ...customLoaded];
   });
+
+  // State input untuk menambah barang baru kustom
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemQty, setCustomItemQty] = useState(1);
 
   // Handler pergantian fasilitas: otomatis sesuaikan daftar barang sesuai fasilitas yang dipilih
   function handleFacilityChange(newFacilityId: string) {
     setFacilityId(newFacilityId);
+    const customItemsCurrent = inventoryItems.filter((it) => it.isCustom);
     const facilitySpecificItems = facilityItemsMap[newFacilityId];
     if (facilitySpecificItems && facilitySpecificItems.length > 0) {
-      setInventoryItems(
-        facilitySpecificItems.map((it) => {
-          const existing = initialItems.find((x) => x.name === it.name);
-          return {
-            name: it.name,
-            quantity: existing ? existing.quantity : 0,
-            notes: existing?.notes || "",
-          };
-        })
-      );
+      const baseLoaded = facilitySpecificItems.map((it) => {
+        const existing = initialItems.find((x) => x.name === it.name);
+        return {
+          name: it.name,
+          quantity: existing ? existing.quantity : 0,
+          notes: existing?.notes || "",
+          isCustom: false,
+        };
+      });
+      setInventoryItems([...baseLoaded, ...customItemsCurrent]);
     } else {
-      setInventoryItems(
-        standardItems.map((name) => {
-          const existing = initialItems.find((x) => x.name === name);
-          return {
-            name,
-            quantity: existing ? existing.quantity : 0,
-            notes: existing?.notes || "",
-          };
-        })
-      );
+      const baseLoaded = standardItems.map((name) => {
+        const existing = initialItems.find((x) => x.name === name);
+        return {
+          name,
+          quantity: existing ? existing.quantity : 0,
+          notes: existing?.notes || "",
+          isCustom: false,
+        };
+      });
+      setInventoryItems([...baseLoaded, ...customItemsCurrent]);
     }
   }
 
@@ -256,6 +298,21 @@ export default function NewBookingForm({
     }
   }
 
+  // Helper peserta kegiatan
+  function addParticipantMember() {
+    setParticipantsList((prev) => [...prev, { name: "", nim: "", delegation: "" }]);
+  }
+
+  function removeParticipantMember(idx: number) {
+    setParticipantsList((prev) => prev.filter((_, i) => i !== idx));
+  }
+
+  function updateParticipant(idx: number, field: keyof ParticipantMemberState, val: string) {
+    setParticipantsList((prev) =>
+      prev.map((p, i) => (i === idx ? { ...p, [field]: val } : p))
+    );
+  }
+
   // Helper manipulasi barang
   function updateItemQty(index: number, delta: number) {
     setInventoryItems((prev) =>
@@ -271,6 +328,37 @@ export default function NewBookingForm({
         i === index ? { ...item, quantity: Math.max(0, qty) } : item
       )
     );
+  }
+
+  // Tambah barang kustom sendiri
+  function handleAddCustomItem() {
+    const trimmed = customItemName.trim();
+    if (!trimmed) {
+      alert("Silakan masukkan nama barang yang ingin ditambahkan.");
+      return;
+    }
+    const existingIndex = inventoryItems.findIndex(
+      (it) => it.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (existingIndex >= 0) {
+      updateItemQty(existingIndex, customItemQty || 1);
+    } else {
+      setInventoryItems((prev) => [
+        ...prev,
+        {
+          name: trimmed,
+          quantity: Math.max(1, customItemQty || 1),
+          notes: "Barang kustom pemohon",
+          isCustom: true,
+        },
+      ]);
+    }
+    setCustomItemName("");
+    setCustomItemQty(1);
+  }
+
+  function removeCustomItem(nameToRemove: string) {
+    setInventoryItems((prev) => prev.filter((it) => it.name !== nameToRemove));
   }
 
   // Helper panitia
@@ -405,6 +493,7 @@ export default function NewBookingForm({
 
   // Filter data untuk dikirim
   const activeItemsToSubmit = inventoryItems.filter((it) => it.quantity > 0);
+  const activeParticipantsToSubmit = participantsList.filter((p) => p.name.trim().length > 0);
   const activeCommitteeToSubmit = committee.filter((c) => c.name.trim().length > 0);
   const activeOtherPartiesToSubmit = otherParties.filter((p) => p.name.trim().length > 0);
   const activeRundownToSubmit = rundown.filter((r) => r.agenda.trim().length > 0);
@@ -535,7 +624,7 @@ export default function NewBookingForm({
         <input type="hidden" name="title" value={title} />
         <input type="hidden" name="purpose" value={purpose} />
         <input type="hidden" name="description" value={description} />
-        <input type="hidden" name="participants" value={participants} />
+        <input type="hidden" name="participantsJson" value={JSON.stringify(activeParticipantsToSubmit)} />
         <input type="hidden" name="leadName" value={effectiveLeadName} />
         <input type="hidden" name="leadContact" value={effectiveLeadContact} />
         <input type="hidden" name="chairName" value={chairName} />
@@ -987,8 +1076,8 @@ export default function NewBookingForm({
             {/* Nama Kegiatan, Perihal, Deskripsi */}
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Nama / Tajuk Kegiatan *
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                  Nama / Tajuk Kegiatan <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -996,13 +1085,13 @@ export default function NewBookingForm({
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Masukkan nama / tajuk kegiatan resmi"
-                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Perihal / Tujuan Peminjaman *
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                  Perihal / Tujuan Peminjaman <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -1010,13 +1099,13 @@ export default function NewBookingForm({
                   value={purpose}
                   onChange={(e) => setPurpose(e.target.value)}
                   placeholder="Perihal dan tujuan peminjaman fasilitas"
-                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-2xs"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                  Deskripsi Kegiatan *
+                <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">
+                  Deskripsi Kegiatan <span className="text-rose-500">*</span>
                 </label>
                 <textarea
                   rows={3}
@@ -1024,49 +1113,106 @@ export default function NewBookingForm({
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Jelaskan ringkasan agenda dan rangkaian kegiatan yang akan berlangsung..."
-                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 shadow-2xs"
                 ></textarea>
-              </div>
-
-              {/* KOLOM PESERTA KEGIATAN (OPSIONAL) */}
-              <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-200 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-800 uppercase tracking-wider">
-                    Target / Peserta Kegiatan <span className="text-slate-400 font-normal lowercase">(opsional)</span>
-                  </label>
-                  <span className="text-[10px] font-semibold text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
-                    Opsional
-                  </span>
-                </div>
-                <input
-                  type="text"
-                  value={participants}
-                  onChange={(e) => setParticipants(e.target.value)}
-                  placeholder="Contoh: Estimasi 150 mahasiswa seluruh jurusan PoliMedia & tamu undangan luar kampus"
-                  className="w-full px-3.5 py-2 bg-white text-slate-900 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500"
-                />
-                <p className="text-[11px] text-slate-500">
-                  Cantumkan perkiraan jumlah peserta, sasaran audiens (mahasiswa umum/jurusan tertentu), atau tamu undangan bila ada.
-                </p>
               </div>
             </div>
 
-            {/* LAMPIRAN BARANG YANG DIBUTUHKAN (TETAPKAN RATA: SPEAKER, KURSI, SOFA, MEJA, DLL) */}
-            <div className="space-y-3 pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between">
+            {/* DAFTAR PESERTA KEGIATAN (NAMA, NIM, DELEGASI) - OPSIONAL */}
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gradient-to-r from-amber-50/70 to-orange-50/40 p-3.5 rounded-xl border border-amber-200/80">
                 <div>
-                  <h4 className="text-sm font-extrabold text-slate-900">
-                    📦 Lampiran Barang / Sarana yang Dibutuhkan
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    Gunakan tombol (+ / -) untuk menambah atau mengurangi jumlah barang yang diperlukan
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-extrabold text-slate-900">
+                      🎓 Peserta Kegiatan
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 uppercase tracking-wide">
+                      Opsional
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Cantumkan nama lengkap peserta kegiatan, NIM, serta delegasi / asal utusan (kelas/jurusan/lembaga).
                   </p>
                 </div>
-                <span className="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200">
+                <button
+                  type="button"
+                  onClick={addParticipantMember}
+                  className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+                >
+                  + Tambah Peserta
+                </button>
+              </div>
+
+              <div className="space-y-2.5">
+                {participantsList.map((participant, idx) => (
+                  <div
+                    key={idx}
+                    className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-amber-50/30 p-3 rounded-xl border border-amber-200/60 items-center hover:bg-amber-50/60 transition"
+                  >
+                    <div className="sm:col-span-5">
+                      <input
+                        type="text"
+                        placeholder="Nama Lengkap Peserta (Opsional)"
+                        value={participant.name}
+                        onChange={(e) => updateParticipant(idx, "name", e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-amber-200 rounded-lg text-xs focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <input
+                        type="text"
+                        placeholder="NIM Peserta"
+                        value={participant.nim}
+                        onChange={(e) => updateParticipant(idx, "nim", e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-amber-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <input
+                        type="text"
+                        placeholder="Delegasi / Asal Utusan (e.g. HIMA D3, Kelas A)"
+                        value={participant.delegation}
+                        onChange={(e) => updateParticipant(idx, "delegation", e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-amber-200 rounded-lg text-xs focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-1 text-right">
+                      {participantsList.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeParticipantMember(idx)}
+                          className="w-7 h-7 rounded-lg text-rose-600 hover:bg-rose-100 font-bold transition inline-flex items-center justify-center cursor-pointer"
+                          title="Hapus baris peserta"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* LAMPIRAN BARANG YANG DIBUTUHKAN & TAMBAH BARANG LAINNYA CUSTOM */}
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                    <span>📦 Lampiran Barang & Sarana Fasilitas</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200 uppercase tracking-wide">
+                      Bawaan & Kustom
+                    </span>
+                  </h4>
+                  <p className="text-xs text-slate-500">
+                    Gunakan tombol (+ / -) untuk sarana ruangan, atau tambahkan barang kustom lainnya sendiri jika tidak ada di daftar.
+                  </p>
+                </div>
+                <span className="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200 w-fit">
                   {activeItemsToSubmit.length} barang dipilih
                 </span>
               </div>
 
+              {/* Grid Barang Standar & Kustom */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {inventoryItems.map((item, idx) => {
                   const facilityItems = facilityId ? facilityItemsMap[facilityId] : undefined;
@@ -1077,15 +1223,26 @@ export default function NewBookingForm({
                       key={idx}
                       className={`p-3.5 rounded-xl border transition flex items-center justify-between ${
                         item.quantity > 0
-                          ? "bg-blue-50/70 border-blue-300 shadow-2xs"
+                          ? item.isCustom
+                            ? "bg-purple-50/80 border-purple-300 shadow-2xs"
+                            : "bg-blue-50/70 border-blue-300 shadow-2xs"
                           : "bg-slate-50 border-slate-200"
                       }`}
                     >
-                      <div>
-                        <div className="font-bold text-xs text-slate-900">{item.name}</div>
+                      <div className="pr-2 flex-1">
+                        <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                          <span>{item.name}</span>
+                          {item.isCustom && (
+                            <span className="text-[9px] font-extrabold bg-purple-200 text-purple-900 px-1.5 py-0.2 rounded">
+                              Kustom
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[11px] text-slate-500">
                           {item.quantity > 0 ? (
-                            <span className="text-blue-700 font-semibold">{item.quantity} unit dipinjam</span>
+                            <span className={item.isCustom ? "text-purple-800 font-semibold" : "text-blue-700 font-semibold"}>
+                              {item.quantity} unit dipinjam
+                            </span>
                           ) : (
                             "Tidak dipinjam"
                           )}
@@ -1097,7 +1254,7 @@ export default function NewBookingForm({
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={() => updateItemQty(idx, -1)}
@@ -1129,29 +1286,84 @@ export default function NewBookingForm({
                         >
                           +
                         </button>
+                        {item.isCustom && (
+                          <button
+                            type="button"
+                            onClick={() => removeCustomItem(item.name)}
+                            className="w-6 h-6 rounded text-rose-500 hover:bg-rose-100 flex items-center justify-center text-xs font-bold cursor-pointer"
+                            title="Hapus barang kustom"
+                          >
+                            ✕
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
+
+              {/* Form Tambah Barang Lainnya (Kustom Sendiri) */}
+              <div className="bg-gradient-to-r from-purple-50/60 to-blue-50/50 p-4 rounded-xl border border-purple-200 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">✨</span>
+                  <span className="text-xs font-extrabold text-purple-950">
+                    Tambah Barang Lainnya (Kustom Pemohon):
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                  <input
+                    type="text"
+                    placeholder="Nama barang sarana lainnya (e.g. Kabel Roll 20M, Mic Wireless, Podium, Flipchart...)"
+                    value={customItemName}
+                    onChange={(e) => setCustomItemName(e.target.value)}
+                    className="flex-1 px-3.5 py-2 bg-white text-slate-900 border border-purple-300 rounded-xl text-xs focus:ring-2 focus:ring-purple-500"
+                  />
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 bg-white px-2.5 py-1.5 border border-purple-300 rounded-xl">
+                      <span className="text-[11px] font-bold text-slate-600">Qty:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        value={customItemQty}
+                        onChange={(e) => setCustomItemQty(Math.max(1, Number(e.target.value)))}
+                        className="w-12 text-center text-xs font-bold text-slate-900 outline-none"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleAddCustomItem}
+                      className="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
+                    >
+                      + Tambah Barang
+                    </button>
+                  </div>
+                </div>
+                <p className="text-[11px] text-purple-900/80">
+                  Barang yang Anda tambahkan sendiri akan otomatis dimasukkan ke dalam daftar lampiran sarana peminjaman fasilitas.
+                </p>
+              </div>
             </div>
 
             {/* SUSUNAN PANITIA (NAMA LENGKAP, DIVISI, NIM, PROGRAM STUDI) - OPSIONAL */}
-            <div className="space-y-3 pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gradient-to-r from-emerald-50/70 to-teal-50/40 p-3.5 rounded-xl border border-emerald-200/80">
                 <div>
-                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
-                    <span>👥 Susunan Panitia Pelaksana</span>
-                    <span className="text-[11px] font-normal text-slate-400 lowercase">(opsional)</span>
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    Bisa dikosongkan atau diisi nama panitia, divisi (opsional), NIM, dan Program Studi
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-extrabold text-slate-900">
+                      👥 Susunan Panitia Pelaksana
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase tracking-wide">
+                      Opsional
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Bisa dikosongkan atau diisi nama panitia, divisi / seksi (opsional), NIM, dan Program Studi.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={addCommitteeMember}
-                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
                 >
                   + Tambah Panitia
                 </button>
@@ -1161,7 +1373,7 @@ export default function NewBookingForm({
                 {committee.map((member, idx) => (
                   <div
                     key={idx}
-                    className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 items-center"
+                    className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-emerald-50/30 p-3 rounded-xl border border-emerald-200/60 items-center hover:bg-emerald-50/60 transition"
                   >
                     <div className="sm:col-span-4">
                       <input
@@ -1169,7 +1381,7 @@ export default function NewBookingForm({
                         placeholder="Nama Lengkap Panitia (Opsional)"
                         value={member.name}
                         onChange={(e) => updateCommittee(idx, "name", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-emerald-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div className="sm:col-span-3">
@@ -1178,7 +1390,7 @@ export default function NewBookingForm({
                         placeholder="Divisi / Bidang (Opsional)"
                         value={member.division || ""}
                         onChange={(e) => updateCommittee(idx, "division", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-emerald-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -1187,7 +1399,7 @@ export default function NewBookingForm({
                         placeholder="NIM"
                         value={member.nim}
                         onChange={(e) => updateCommittee(idx, "nim", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono"
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-emerald-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div className="sm:col-span-2">
@@ -1196,7 +1408,7 @@ export default function NewBookingForm({
                         placeholder="Program Studi"
                         value={member.prodi}
                         onChange={(e) => updateCommittee(idx, "prodi", e.target.value)}
-                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-emerald-200 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500"
                       />
                     </div>
                     <div className="sm:col-span-1 text-right">
@@ -1217,21 +1429,25 @@ export default function NewBookingForm({
             </div>
 
             {/* DELEGASI / PIHAK LAIN YANG TERLIBAT - OPSIONAL */}
-            <div className="space-y-3 pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gradient-to-r from-sky-50/70 to-indigo-50/40 p-3.5 rounded-xl border border-sky-200/80">
                 <div>
-                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
-                    <span>🤝 Delegasi / Pihak Eksternal yang Terlibat</span>
-                    <span className="text-[11px] font-normal text-slate-400 lowercase">(opsional)</span>
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    Bila kegiatan melibatkan pengisi acara eksternal, pemateri, juri, atau sponsor
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-extrabold text-slate-900">
+                      🤝 Delegasi / Pihak Eksternal yang Terlibat
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 border border-sky-300 uppercase tracking-wide">
+                      Opsional
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Bila kegiatan melibatkan pengisi acara eksternal, pemateri, juri lomba, atau perwakilan sponsor.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={addOtherParty}
-                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                  className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
                 >
                   + Tambah Delegasi
                 </button>
@@ -1239,14 +1455,14 @@ export default function NewBookingForm({
 
               {otherParties.length === 0 ? (
                 <div className="p-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-300 text-center text-xs text-slate-500">
-                  Belum ada delegasi/pihak lain yang ditambahkan. Klik <strong>+ Tambah Delegasi</strong> jika diperlukan.
+                  Belum ada delegasi/pihak eksternal yang ditambahkan. Klik <strong>+ Tambah Delegasi</strong> bila kegiatan Anda melibatkan pihak luar.
                 </div>
               ) : (
                 <div className="space-y-2.5">
                   {otherParties.map((party, idx) => (
                     <div
                       key={idx}
-                      className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50 p-3 rounded-xl border border-slate-200 items-center"
+                      className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-sky-50/30 p-3 rounded-xl border border-sky-200/60 items-center hover:bg-sky-50/60 transition"
                     >
                       <div className="sm:col-span-4">
                         <input
@@ -1254,7 +1470,7 @@ export default function NewBookingForm({
                           placeholder="Nama Pihak / Instansi (Opsional)"
                           value={party.name}
                           onChange={(e) => updateOtherParty(idx, "name", e.target.value)}
-                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-sky-200 rounded-lg text-xs focus:ring-2 focus:ring-sky-500"
                         />
                       </div>
                       <div className="sm:col-span-4">
@@ -1263,7 +1479,7 @@ export default function NewBookingForm({
                           placeholder="Peran (e.g. Pemateri, Juri, Sponsor)"
                           value={party.role}
                           onChange={(e) => updateOtherParty(idx, "role", e.target.value)}
-                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-sky-200 rounded-lg text-xs focus:ring-2 focus:ring-sky-500"
                         />
                       </div>
                       <div className="sm:col-span-3">
@@ -1272,7 +1488,7 @@ export default function NewBookingForm({
                           placeholder="Kontak HP / Email"
                           value={party.contact}
                           onChange={(e) => updateOtherParty(idx, "contact", e.target.value)}
-                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono"
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-sky-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-sky-500"
                         />
                       </div>
                       <div className="sm:col-span-1 text-right">
@@ -1292,21 +1508,25 @@ export default function NewBookingForm({
             </div>
 
             {/* SUSUNAN KEGIATAN / RUNDOWN (FORMAT JAM MUDAH DIISI, TIDAK MANUAL) */}
-            <div className="space-y-3 pt-2 border-t border-slate-100">
-              <div className="flex items-center justify-between">
+            <div className="space-y-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-gradient-to-r from-violet-50/70 to-purple-50/40 p-3.5 rounded-xl border border-violet-200/80">
                 <div>
-                  <h4 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">
-                    <span>⏱️ Susunan Kegiatan (Rundown Acara)</span>
-                    <span className="text-[11px] font-normal text-slate-400 lowercase">(opsional)</span>
-                  </h4>
-                  <p className="text-xs text-slate-500">
-                    Pilih jam mulai & selesai agar waktu tersusun rapi otomatis, serta nama mata acara dan PIC
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-sm font-extrabold text-slate-900">
+                      ⏱️ Susunan Kegiatan (Rundown Acara)
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 border border-violet-300 uppercase tracking-wide">
+                      Opsional
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Pilih jam mulai & selesai agar waktu tersusun rapi otomatis, serta nama mata acara dan PIC.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={addRundownItem}
-                  className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold transition cursor-pointer"
+                  className="px-3.5 py-1.5 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-xs font-bold transition shadow-2xs cursor-pointer shrink-0"
                 >
                   + Tambah Susunan
                 </button>
@@ -1316,7 +1536,7 @@ export default function NewBookingForm({
                 {rundown.map((item, idx) => (
                   <div
                     key={idx}
-                    className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-2.5"
+                    className="p-3.5 bg-violet-50/30 rounded-xl border border-violet-200/70 space-y-2.5 hover:bg-violet-50/50 transition"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
                       <div className="sm:col-span-5">
@@ -1328,7 +1548,7 @@ export default function NewBookingForm({
                           placeholder="e.g. Pembukaan & Sambutan Ketua"
                           value={item.agenda}
                           onChange={(e) => updateRundown(idx, "agenda", e.target.value)}
-                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-violet-200 rounded-lg text-xs focus:ring-2 focus:ring-violet-500"
                         />
                       </div>
 
@@ -1342,14 +1562,14 @@ export default function NewBookingForm({
                             type="time"
                             value={item.startTime || ""}
                             onChange={(e) => updateRundown(idx, "startTime", e.target.value)}
-                            className="w-1/2 px-2.5 py-1.5 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                            className="w-1/2 px-2.5 py-1.5 bg-white text-slate-900 border border-violet-200 rounded-lg text-xs font-mono font-bold focus:ring-2 focus:ring-violet-500"
                           />
                           <span className="text-slate-400 font-bold">–</span>
                           <input
                             type="time"
                             value={item.endTime || ""}
                             onChange={(e) => updateRundown(idx, "endTime", e.target.value)}
-                            className="w-1/2 px-2.5 py-1.5 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono font-bold"
+                            className="w-1/2 px-2.5 py-1.5 bg-white text-slate-900 border border-violet-200 rounded-lg text-xs font-mono font-bold focus:ring-2 focus:ring-violet-500"
                           />
                         </div>
                       </div>
@@ -1363,7 +1583,7 @@ export default function NewBookingForm({
                           placeholder="Nama PIC"
                           value={item.pic}
                           onChange={(e) => updateRundown(idx, "pic", e.target.value)}
-                          className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs"
+                          className="w-full px-3 py-2 bg-white text-slate-900 border border-violet-200 rounded-lg text-xs focus:ring-2 focus:ring-violet-500"
                         />
                       </div>
 
@@ -1382,10 +1602,10 @@ export default function NewBookingForm({
                     </div>
 
                     {/* Ringkasan waktu otomatis & tombol durasi cepat */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-200/70 text-[11px]">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-violet-200/60 text-[11px]">
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <span className="font-semibold text-slate-500">Tampilan Waktu:</span>
-                        <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        <span className="font-mono font-bold text-violet-800 bg-violet-100/70 px-2 py-0.5 rounded border border-violet-200">
                           {item.time || (item.startTime && item.endTime ? `${item.startTime.replace(":", ".")} – ${item.endTime.replace(":", ".")} WIB` : "Belum diatur")}
                         </span>
                       </div>
