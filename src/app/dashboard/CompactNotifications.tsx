@@ -4,6 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { fmtDateTime } from "@/lib/time";
 
+// Menghapus pola kode pengajuan seperti "PJM-2026-00002 — " atau "PJM-2026-00002: "
+function cleanNotificationBody(body: string) {
+  if (!body) return "";
+  return body.replace(/^PJM-\d{4}-\d+\s*(—|-|:)\s*/i, "").trim();
+}
+
 export default function CompactNotifications({
   notifications,
 }: {
@@ -36,7 +42,7 @@ export default function CompactNotifications({
               {latest.title}
             </span>
             <span className="text-slate-500 truncate hidden md:inline">
-              — {latest.body}
+              — {cleanNotificationBody(latest.body)}
             </span>
             {unreadCount > 0 && (
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 font-extrabold text-[10px] rounded-full shrink-0">
@@ -80,7 +86,7 @@ export default function CompactNotifications({
               >
                 <div className="space-y-0.5 min-w-0">
                   <div className="font-bold text-slate-800">{n.title}</div>
-                  <div className="text-slate-600 leading-relaxed text-[11px]">{n.body}</div>
+                  <div className="text-slate-600 leading-relaxed text-[11px]">{cleanNotificationBody(n.body)}</div>
                   <div className="text-[10px] text-slate-400 font-mono">
                     {fmtDateTime(n.created_at)}
                   </div>

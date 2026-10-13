@@ -204,7 +204,7 @@ export async function actOnBooking(actor: Actor, bookingId: string, action: Step
       }
       await query(`UPDATE bookings SET updated_at = now() WHERE id = $1`, [b.id], client);
       await audit(client, actor, "BOOKING_STEP_FORWARDED", "booking", b.id, { step: current.label, note });
-      await notify(client, orgUsers, "Pengajuan diteruskan", `${b.code}: tahap "${current.label}" selesai.`, link);
+      await notify(client, orgUsers, "Pengajuan diteruskan", `Tahap "${current.label}" untuk "${b.title}" selesai.`, link);
       return { status: "PENDING" as const };
     }
 
@@ -225,7 +225,7 @@ export async function actOnBooking(actor: Actor, bookingId: string, action: Step
         client,
       );
       await audit(client, actor, "BOOKING_APPROVED", "booking", b.id, { note, decidedByRole: actor.role });
-      await notify(client, orgUsers, "Peminjaman disetujui", `${b.code} — ${b.title} telah disetujui oleh Subbagian Umum.`, link);
+      await notify(client, orgUsers, "Peminjaman disetujui", `Pengajuan "${b.title}" telah disetujui oleh Subbagian Umum.`, link);
       return { status: "APPROVED" as const };
     }
 
@@ -252,7 +252,7 @@ export async function actOnBooking(actor: Actor, bookingId: string, action: Step
     await releaseLocks(client, b.id, "REJECTED");
     await audit(client, actor, "BOOKING_REJECTED", "booking", b.id, { note, atStep: current.label, decidedByRole: actor.role });
     const rejectorName = actor.role === "SUBBAG_UMUM" ? "Subbagian Umum" : (actor.role === "WADIR" ? "Wakil Direktur" : current.label);
-    await notify(client, orgUsers, "Peminjaman ditolak", `${b.code} — ${b.title} ditolak oleh ${rejectorName}.${note ? ` Alasan: ${note}` : ""}`, link);
+    await notify(client, orgUsers, "Peminjaman ditolak", `${b.title} ditolak oleh ${rejectorName}.${note ? ` Alasan: ${note}` : ""}`, link);
     return { status: "REJECTED" as const };
   });
 }

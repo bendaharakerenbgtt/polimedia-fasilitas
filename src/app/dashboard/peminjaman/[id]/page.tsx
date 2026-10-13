@@ -81,7 +81,18 @@ export default async function BookingDetailPage({
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* Tombol Navigasi Kembali */}
+      <div>
+        <Link
+          href="/dashboard"
+          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-300 transition shadow-2xs"
+        >
+          <span>←</span>
+          <span>Kembali ke Dashboard</span>
+        </Link>
+      </div>
+
       {/* Main Header Card */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
