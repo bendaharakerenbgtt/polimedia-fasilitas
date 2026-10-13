@@ -17,6 +17,7 @@ interface InventoryItemState {
 interface ParticipantMemberState {
   name: string;
   nim: string;
+  prodi?: string;
   delegation: string;
 }
 
@@ -80,20 +81,21 @@ export default function NewBookingForm({
   const [purpose, setPurpose] = useState(initialBooking?.purpose ?? "");
   const [description, setDescription] = useState(initialBooking?.description ?? "");
 
-  // Peserta Kegiatan (Nama, NIM, Delegasi / Asal Utusan) - Opsional
+  // Peserta Kegiatan (Nama, NIM, Program Studi, Delegasi / Asal Utusan) - Opsional
   const [participantsList, setParticipantsList] = useState<ParticipantMemberState[]>(() => {
     if (Array.isArray(initialBooking?.participants) && initialBooking.participants.length > 0) {
       return initialBooking.participants.map((p: any) => ({
         name: p.name || "",
         nim: p.nim || "",
+        prodi: p.prodi || "",
         delegation: p.delegation || "",
       }));
     }
     // Jika ada string tersimpan dari versi sebelumnya
     if (typeof initialBooking?.participants === "string" && initialBooking.participants.trim()) {
-      return [{ name: initialBooking.participants, nim: "", delegation: "" }];
+      return [{ name: initialBooking.participants, nim: "", prodi: "", delegation: "" }];
     }
-    return [{ name: "", nim: "", delegation: "" }];
+    return [{ name: "", nim: "", prodi: "", delegation: "" }];
   });
 
   // Inisialisasi daftar barang bawaan dari facilityItemsMap jika ada, atau standardItems
@@ -300,7 +302,7 @@ export default function NewBookingForm({
 
   // Helper peserta kegiatan
   function addParticipantMember() {
-    setParticipantsList((prev) => [...prev, { name: "", nim: "", delegation: "" }]);
+    setParticipantsList((prev) => [...prev, { name: "", nim: "", prodi: "", delegation: "" }]);
   }
 
   function removeParticipantMember(idx: number) {
@@ -1128,7 +1130,7 @@ export default function NewBookingForm({
               </div>
             </div>
 
-            {/* DAFTAR PESERTA KEGIATAN (NAMA, NIM, DELEGASI) - OPSIONAL */}
+            {/* DAFTAR PESERTA KEGIATAN (NAMA, NIM, PRODI, DELEGASI) - OPSIONAL */}
             <div className="space-y-3 pt-4 border-t border-slate-100">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div>
@@ -1141,7 +1143,7 @@ export default function NewBookingForm({
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Cantumkan nama lengkap peserta kegiatan, NIM, serta delegasi / asal utusan (kelas/jurusan/lembaga).
+                    Cantumkan nama lengkap peserta kegiatan, NIM, Program Studi, serta delegasi / asal utusan (kelas/organisasi).
                   </p>
                 </div>
                 <button
@@ -1159,19 +1161,19 @@ export default function NewBookingForm({
                     key={idx}
                     className="grid grid-cols-1 sm:grid-cols-12 gap-2 bg-slate-50/60 p-3 rounded-xl border border-slate-200 items-center hover:bg-slate-50 transition"
                   >
-                    <div className="sm:col-span-5">
+                    <div className="sm:col-span-4">
                       <input
                         type="text"
-                        placeholder="Nama Lengkap Peserta (Opsional)"
+                        placeholder="Nama Lengkap Peserta"
                         value={participant.name}
                         onChange={(e) => updateParticipant(idx, "name", e.target.value)}
                         className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    <div className="sm:col-span-3">
+                    <div className="sm:col-span-2">
                       <input
                         type="text"
-                        placeholder="NIM Peserta"
+                        placeholder="NIM"
                         value={participant.nim}
                         onChange={(e) => updateParticipant(idx, "nim", e.target.value)}
                         className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-blue-500"
@@ -1180,7 +1182,16 @@ export default function NewBookingForm({
                     <div className="sm:col-span-3">
                       <input
                         type="text"
-                        placeholder="Delegasi / Asal Utusan (e.g. HIMA D3, Kelas A)"
+                        placeholder="Program Studi"
+                        value={participant.prodi || ""}
+                        onChange={(e) => updateParticipant(idx, "prodi", e.target.value)}
+                        className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <input
+                        type="text"
+                        placeholder="Delegasi / Utusan"
                         value={participant.delegation}
                         onChange={(e) => updateParticipant(idx, "delegation", e.target.value)}
                         className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"
@@ -1365,7 +1376,7 @@ export default function NewBookingForm({
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Wajib diisi minimal 1 anggota panitia (nama lengkap, divisi / seksi, NIM, dan Program Studi).
+                    Wajib diisi minimal 1 anggota panitia (nama lengkap, divisi / bidang opsional, NIM, dan Program Studi).
                   </p>
                 </div>
                 <button
@@ -1395,7 +1406,7 @@ export default function NewBookingForm({
                     <div className="sm:col-span-3">
                       <input
                         type="text"
-                        placeholder="Divisi / Bidang"
+                        placeholder="Divisi / Bidang (Opsional)"
                         value={member.division || ""}
                         onChange={(e) => updateCommittee(idx, "division", e.target.value)}
                         className="w-full px-3 py-2 bg-white text-slate-900 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500"

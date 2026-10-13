@@ -64,6 +64,7 @@ export const bookingDetailsSchema = z.object({
         z.object({
           name: str(150).default(""),
           nim: str(50).default(""),
+          prodi: str(100).default(""),
           delegation: str(150).default(""),
         })
       ),

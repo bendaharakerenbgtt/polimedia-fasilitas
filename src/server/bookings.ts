@@ -104,7 +104,7 @@ export async function createBookingDraft(
         JSON.stringify(d.committee ?? []),
         JSON.stringify(d.rundown ?? []),
         d.specialNotes || (Array.isArray(d.participants) && d.participants.length > 0
-          ? `Peserta Kegiatan:\n${d.participants.map((p: any) => `- ${p.name || "Peserta"} (NIM: ${p.nim || "-"}) [Delegasi: ${p.delegation || "-"}]`).join("\n")}`
+          ? `Peserta Kegiatan:\n${d.participants.map((p: any) => `- ${p.name || "Peserta"} (NIM: ${p.nim || "-"}) [Prodi: ${p.prodi || "-"}] [Delegasi: ${p.delegation || "-"}]`).join("\n")}`
           : (typeof d.participants === "string" && d.participants ? `Peserta Kegiatan: ${d.participants}` : "")),
         actor.id,
       ],
@@ -246,7 +246,7 @@ export async function updateBookingDraft(
         d.committee ? JSON.stringify(d.committee) : null,
         d.rundown ? JSON.stringify(d.rundown) : null,
         d.specialNotes || (Array.isArray(d.participants) && d.participants.length > 0
-          ? `Peserta Kegiatan:\n${d.participants.map((p: any) => `- ${p.name || "Peserta"} (NIM: ${p.nim || "-"}) [Delegasi: ${p.delegation || "-"}]`).join("\n")}`
+          ? `Peserta Kegiatan:\n${d.participants.map((p: any) => `- ${p.name || "Peserta"} (NIM: ${p.nim || "-"}) [Prodi: ${p.prodi || "-"}] [Delegasi: ${p.delegation || "-"}]`).join("\n")}`
           : (typeof d.participants === "string" && d.participants ? `Peserta Kegiatan: ${d.participants}` : null)),
       ],
       client

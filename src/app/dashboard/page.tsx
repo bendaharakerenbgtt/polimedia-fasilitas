@@ -390,7 +390,7 @@ export default async function DashboardOverviewPage() {
                 <div className="flex items-start justify-between">
                   <div>
                     <span className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">
-                      {cr.org_name} • {cr.code}
+                      {cr.org_name}
                     </span>
                     <h4 className="font-bold text-sm text-slate-900 mt-0.5">{cr.title}</h4>
                     <p className="text-xs text-slate-500">Fasilitas: <strong>{cr.facility_name}</strong></p>
@@ -442,7 +442,7 @@ export default async function DashboardOverviewPage() {
                 <div>
                   <div className="font-bold text-slate-900 text-sm">{pa.title || "(Tanpa Judul)"}</div>
                   <div className="text-xs text-slate-500">
-                    {pa.code} • {pa.facility_name} • {pa.step_label || "Keputusan Akhir"}
+                    {pa.facility_name} • {pa.step_label || "Keputusan Akhir"}
                   </div>
                 </div>
                 <Link
