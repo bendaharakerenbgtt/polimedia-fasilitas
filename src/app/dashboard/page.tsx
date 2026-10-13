@@ -126,10 +126,10 @@ export default async function DashboardOverviewPage() {
         <table className="w-full text-left text-sm text-slate-600">
           <thead className="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 uppercase text-xs tracking-wider">
             <tr>
-              <th className="px-6 py-3.5">Kode</th>
               <th className="px-6 py-3.5">Kegiatan & Organisasi</th>
               <th className="px-6 py-3.5">Fasilitas</th>
               <th className="px-6 py-3.5">Waktu Penggunaan</th>
+              <th className="px-6 py-3.5">Waktu Pembuatan Draft</th>
               <th className="px-6 py-3.5">Status</th>
               <th className="px-6 py-3.5 text-right">Aksi</th>
             </tr>
@@ -147,9 +147,6 @@ export default async function DashboardOverviewPage() {
 
               return (
                 <tr key={b.id} className="hover:bg-slate-50/70 transition">
-                  <td className="px-6 py-4 font-mono font-semibold text-xs text-slate-800">
-                    {b.code}
-                  </td>
                   <td className="px-6 py-4">
                     <div className="font-semibold text-slate-900">{b.title || "(Draft formulir)"}</div>
                     <div className="text-xs text-slate-500">{b.org_name}</div>
@@ -172,6 +169,12 @@ export default async function DashboardOverviewPage() {
                   </td>
                   <td className="px-6 py-4 text-xs text-slate-600">
                     {fmtRange(b.usage_start, b.usage_end)}
+                  </td>
+                  <td className="px-6 py-4 text-xs text-slate-600 whitespace-nowrap">
+                    <span className="font-medium text-slate-800 block">{fmtDateTime(b.created_at)}</span>
+                    {b.submitted_at && (
+                      <span className="text-[10px] text-slate-400">Dikirim: {fmtDateTime(b.submitted_at)}</span>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <span

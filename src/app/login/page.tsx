@@ -267,8 +267,12 @@ export default function LoginPage() {
           >
             <span>Petugas Satpam & OB? Cek Jadwal & Rincian Barang di Sini →</span>
           </Link>
-          <Link href="/" className="text-slate-500 hover:text-slate-800 transition py-1.5">
-            ← Kembali ke Halaman Utama
+          <Link
+            href="/"
+            className="font-bold text-purple-800 bg-white hover:bg-purple-50 border border-purple-200 px-3.5 py-1.5 rounded-lg transition shadow-2xs flex items-center gap-1.5"
+          >
+            <span>🏛️</span>
+            <span>Buka Portal Publik Kampus PoliMedia ↗</span>
           </Link>
         </div>
       </div>

@@ -90,9 +90,12 @@ export default async function BookingDetailPage({
           <span>←</span>
           <span>Kembali ke Dashboard</span>
         </Link>
-        <span className="text-xs font-mono font-semibold bg-slate-200 text-slate-700 px-3 py-1 rounded-full">
-          {booking.code}
-        </span>
+        <div className="text-right">
+          <span className="text-[11px] text-slate-500 block">Dibuat:</span>
+          <span className="text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1 rounded-full border border-slate-200">
+            {fmtDateTime(booking.created_at)}
+          </span>
+        </div>
       </div>
 
       {/* Main Header Card */}

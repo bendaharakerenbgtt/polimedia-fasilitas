@@ -84,13 +84,6 @@ export default async function DashboardLayout({
                   </Link>
                 </>
               )}
-              <Link
-                href="/"
-                target="_blank"
-                className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition text-slate-500"
-              >
-                Portal Publik ↗
-              </Link>
             </div>
           </div>
 

@@ -369,7 +369,6 @@ export default function CampusCalendarViewer({
                 <h4 className="text-lg font-extrabold text-slate-900 leading-snug">
                   {selectedEvent.title}
                 </h4>
-                <span className="text-xs font-mono text-slate-400">Kode: {selectedEvent.code}</span>
               </div>
               <button
                 type="button"
