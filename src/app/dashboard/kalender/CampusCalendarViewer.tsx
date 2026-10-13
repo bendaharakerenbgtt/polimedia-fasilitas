@@ -223,7 +223,7 @@ export default function CampusCalendarViewer({
           <div className="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-100">
             {calendarDays.map((item, index) => {
               if (item.dayNumber === null) {
-                return <div key={`empty-${index}`} className="min-h-28 bg-slate-50/40 p-2"></div>;
+                return <div key={`empty-${index}`} className="min-h-[68px] sm:min-h-[78px] bg-slate-50/40 p-1.5"></div>;
               }
 
               const dayEvents = eventsByDate.get(item.dateStr) || [];
@@ -235,29 +235,29 @@ export default function CampusCalendarViewer({
               return (
                 <div
                   key={item.dateStr}
-                  className={`min-h-28 p-2 flex flex-col justify-between transition hover:bg-slate-50/80 ${
-                    isToday ? "bg-blue-50/30 ring-1 ring-inset ring-blue-400" : "bg-white"
+                  className={`min-h-[68px] sm:min-h-[78px] p-1.5 sm:p-2 flex flex-col justify-between transition hover:bg-slate-50/80 ${
+                    isToday ? "bg-amber-50/30 ring-1 ring-inset ring-amber-400" : "bg-white"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center justify-between mb-1">
                     <span
-                      className={`text-xs font-extrabold w-6 h-6 flex items-center justify-center rounded-full ${
+                      className={`text-xs font-bold w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
                         isToday
-                          ? "bg-blue-600 text-white shadow-2xs"
+                          ? "bg-purple-800 text-amber-300 font-extrabold shadow-2xs"
                           : "text-slate-700"
                       }`}
                     >
                       {item.dayNumber}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span className="text-[10px] font-bold text-slate-400">
+                      <span className="text-[10px] font-semibold text-slate-400">
                         {dayEvents.length} acara
                       </span>
                     )}
                   </div>
 
                   {/* List Event di Tanggal Ini */}
-                  <div className="space-y-1 overflow-y-auto max-h-24 pr-0.5">
+                  <div className="space-y-1 overflow-y-auto max-h-20 pr-0.5">
                     {dayEvents.map((ev) => (
                       <button
                         key={ev.id}
