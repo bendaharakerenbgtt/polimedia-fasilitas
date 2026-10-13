@@ -250,6 +250,18 @@ export async function assignOrgProdiAction(orgId: string, prodiId: string | null
   }
 }
 
+export async function updateOrganizationAction(orgId: string, data: { name: string; code?: string }) {
+  const user = await requireUser(["ADMIN"]);
+  try {
+    const { updateOrganizationAdmin } = await import("@/server/admin");
+    await updateOrganizationAdmin(user, orgId, data);
+    revalidatePath("/dashboard/admin/pengguna");
+    return { success: true };
+  } catch (err: any) {
+    return { error: err?.message || "Gagal memperbarui data organisasi." };
+  }
+}
+
 export async function updateSettingAction(key: string, value: any) {
   const user = await requireUser(["ADMIN"]);
   try {

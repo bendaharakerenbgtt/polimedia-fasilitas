@@ -643,6 +643,47 @@ export async function removeAdvisorAdmin(actor: Actor, orgId: string, advisorUse
   });
 }
 
+export async function updateOrganizationAdmin(
+  actor: Actor,
+  orgId: string,
+  data: { name: string; code?: string }
+) {
+  if (actor.role !== "ADMIN") throw forbidden();
+  const name = data.name.trim();
+  const code = data.code ? data.code.trim().toUpperCase() : undefined;
+
+  if (!name) {
+    throw new AppError("Nama organisasi wajib diisi.", "VALIDATION");
+  }
+
+  // Cek duplikasi kode bila kode diubah
+  if (code) {
+    const existing = await queryOne<{ id: string }>(
+      `SELECT id FROM organizations WHERE upper(code) = upper($1) AND id <> $2`,
+      [code, orgId]
+    );
+    if (existing) {
+      throw new AppError(`Kode organisasi "${code}" sudah digunakan.`, "VALIDATION");
+    }
+  }
+
+  return tx(async (client) => {
+    const row = await queryOne<{ id: string; name: string; code: string }>(
+      `UPDATE organizations
+       SET name = $1,
+           code = COALESCE($2, code),
+           updated_at = now()
+       WHERE id = $3
+       RETURNING id, name, code`,
+      [name, code || null, orgId],
+      client
+    );
+    if (!row) throw notFound("Organisasi tidak ditemukan.");
+    await audit(client, actor, "ORG_UPDATED", "organization", orgId, { name, code });
+    return row;
+  });
+}
+
 export async function assignOrgProdiAdmin(actor: Actor, orgId: string, prodiId: string | null) {
   if (actor.role !== "ADMIN") throw forbidden();
   return tx(async (client) => {

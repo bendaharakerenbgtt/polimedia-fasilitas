@@ -11,6 +11,7 @@ import {
   assignAdvisorAction,
   removeAdvisorAction,
   assignOrgProdiAction,
+  updateOrganizationAction,
 } from "@/app/actions/admin";
 import type { UserRowAdmin, OrgRowAdmin } from "@/server/admin";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
@@ -34,6 +35,7 @@ export default function UserManager({
   // Modal States
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState<UserRowAdmin | null>(null);
+  const [editingOrg, setEditingOrg] = useState<OrgRowAdmin | null>(null);
   const [resetPwdUser, setResetPwdUser] = useState<UserRowAdmin | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [assignAdvisorModal, setAssignAdvisorModal] = useState<OrgRowAdmin | null>(null);
@@ -162,6 +164,25 @@ export default function UserManager({
     else {
       setEditingUser(null);
       setSuccess(`Data pengguna @${editingUser.username} berhasil diperbarui!`);
+      setTimeout(() => setSuccess(null), 3000);
+      router.refresh();
+    }
+  }
+
+  async function handleUpdateOrg(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!editingOrg) return;
+    setLoading(true);
+    setError(null);
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get("name") as string;
+    const code = formData.get("code") as string;
+    const res = await updateOrganizationAction(editingOrg.id, { name, code });
+    setLoading(false);
+    if (res.error) setError(res.error);
+    else {
+      setEditingOrg(null);
+      setSuccess(`Data organisasi "${name}" berhasil diperbarui!`);
       setTimeout(() => setSuccess(null), 3000);
       router.refresh();
     }
@@ -551,6 +572,12 @@ export default function UserManager({
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setEditingOrg(o)}
+                          className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-300 px-3 py-1.5 rounded-lg transition shadow-2xs cursor-pointer"
+                        >
+                          ✏️ Edit
+                        </button>
                         {o.type === "HIMA" && (
                           <button
                             onClick={() => {
@@ -1010,6 +1037,90 @@ export default function UserManager({
                 <button
                   type="button"
                   onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100 border border-slate-300 rounded-xl cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl disabled:opacity-50 cursor-pointer shadow-xs"
+                >
+                  {loading ? "Menyimpan..." : "Simpan Perubahan"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Organisasi (Nama & Kode Organisasi) */}
+      {editingOrg && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-6 sm:p-7 max-w-md w-full space-y-4 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h4 className="font-extrabold text-slate-900 text-base">
+                  Edit Data Organisasi
+                </h4>
+                <p className="text-xs text-slate-500">
+                  Ubah nama resmi organisasi dan kode singkat
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingOrg(null)}
+                className="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateOrg} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Nama Resmi Organisasi *
+                </label>
+                <input
+                  name="name"
+                  type="text"
+                  required
+                  defaultValue={editingOrg.name}
+                  placeholder="Contoh: BEM Polimedia, HIMA Desain Grafis..."
+                  className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 font-medium focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Nama ini akan tampil di seluruh formulir, lembar pengajuan, dan berita acara.
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Kode Organisasi *
+                </label>
+                <input
+                  name="code"
+                  type="text"
+                  required
+                  defaultValue={editingOrg.code}
+                  placeholder="Contoh: BEM, MPM, UKM-FOTO..."
+                  className="w-full p-2.5 border border-slate-300 rounded-xl bg-white text-slate-900 font-mono uppercase focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Tipe Lembaga
+                </label>
+                <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-slate-700 font-medium">
+                  {editingOrg.type}
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingOrg(null)}
                   className="px-4 py-2 font-semibold text-slate-600 hover:bg-slate-100 border border-slate-300 rounded-xl cursor-pointer"
                 >
                   Batal

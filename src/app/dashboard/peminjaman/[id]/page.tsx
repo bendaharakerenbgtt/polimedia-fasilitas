@@ -33,6 +33,7 @@ export default async function BookingDetailPage({
       f.name AS facility_name, f.location AS facility_location,
       o.name AS org_name, o.type AS org_type,
       u.display_name AS created_by_name,
+      u.username AS created_by_username,
       d.display_name AS decided_by_name
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
@@ -98,8 +99,8 @@ export default async function BookingDetailPage({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">
-                {booking.org_name} ({booking.org_type})
+              <span className="text-xs font-bold text-blue-600 tracking-wider">
+                {booking.org_name} {booking.created_by_username && <span className="font-mono text-blue-500 font-semibold">(@{booking.created_by_username})</span>}
               </span>
               <span className="text-slate-300">•</span>
               <span className="text-xs text-slate-500">
