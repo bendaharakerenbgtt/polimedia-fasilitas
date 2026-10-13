@@ -298,12 +298,12 @@ export default function CampusCalendarViewer({
               <div
                 key={ev.id}
                 onClick={() => setSelectedEvent(ev)}
-                className="p-4 sm:p-5 hover:bg-slate-50/80 transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="group p-4 sm:p-5 hover:bg-purple-50/40 transition cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
-                <div className="space-y-1.5">
+                <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border uppercase ${
+                      className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${
                         ev.status === "APPROVED"
                           ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : ev.status === "PENDING"
@@ -311,22 +311,21 @@ export default function CampusCalendarViewer({
                           : "bg-slate-100 text-slate-600 border-slate-200"
                       }`}
                     >
-                      {ev.status === "APPROVED" ? "Disetujui" : ev.status === "PENDING" ? "Sedang Dicek" : "Selesai"}
+                      {ev.status === "APPROVED" ? "Disetujui Resmi" : ev.status === "PENDING" ? "Sedang Verifikasi" : "Selesai"}
                     </span>
-                    <span className="font-mono text-xs text-slate-400">{ev.code}</span>
                   </div>
 
-                  <h4 className="text-base font-extrabold text-slate-900 leading-snug">
+                  <h4 className="text-base font-extrabold text-slate-900 leading-snug group-hover:text-purple-900 transition">
                     {ev.title}
                   </h4>
 
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500">
-                    <span className="font-semibold text-blue-700">👥 {ev.orgName}</span>
-                    <span>🏛️ {ev.facilityName} ({ev.facilityLocation})</span>
+                    <span className="font-semibold text-purple-800">👥 {ev.orgName}</span>
+                    <span>🏛️ {ev.facilityName}</span>
                   </div>
                 </div>
 
-                <div className="sm:text-right shrink-0 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                <div className="sm:text-right shrink-0 bg-slate-50/80 group-hover:bg-purple-50/70 p-3 sm:px-4 rounded-xl border border-slate-200/80 transition">
                   <div className="text-xs font-bold text-slate-800">
                     📅 {new Date(ev.eventStart).toLocaleDateString("id-ID", {
                       weekday: "long",
@@ -335,7 +334,7 @@ export default function CampusCalendarViewer({
                       year: "numeric"
                     })}
                   </div>
-                  <div className="text-xs font-mono font-extrabold text-blue-700 mt-0.5">
+                  <div className="text-xs font-semibold text-purple-800 mt-1">
                     ⏰ {fmtTime(ev.eventStart)} - {fmtTime(ev.eventEnd)} WIB
                   </div>
                 </div>
@@ -347,12 +346,19 @@ export default function CampusCalendarViewer({
 
       {/* Modal Detail Informasi Agenda Kegiatan */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-6 sm:p-7 max-w-lg w-full space-y-5 shadow-2xl border border-slate-100 max-h-[85vh] overflow-y-auto animate-in fade-in duration-150">
-            <div className="flex items-start justify-between">
-              <div>
+        <div 
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
+          onClick={() => setSelectedEvent(null)}
+        >
+          <div 
+            className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-start justify-between gap-3 bg-gradient-to-r from-purple-50/60 to-amber-50/40">
+              <div className="space-y-1">
                 <span
-                  className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase inline-block mb-1.5 ${
+                  className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border uppercase tracking-wider inline-block ${
                     selectedEvent.status === "APPROVED"
                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                       : selectedEvent.status === "PENDING"
@@ -366,99 +372,106 @@ export default function CampusCalendarViewer({
                     ? "Menunggu Verifikasi"
                     : "Selesai"}
                 </span>
-                <h4 className="text-lg font-extrabold text-slate-900 leading-snug">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 leading-snug">
                   {selectedEvent.title}
-                </h4>
+                </h3>
+                <div className="text-xs font-semibold text-purple-900">
+                  Oleh: {selectedEvent.orgName}
+                </div>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                className="text-slate-400 hover:text-slate-600 font-bold text-lg cursor-pointer"
+                className="w-8 h-8 rounded-full bg-white/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-base transition cursor-pointer shadow-2xs shrink-0"
+                title="Tutup"
               >
                 ✕
               </button>
             </div>
 
-            {/* Landscape Facility Preview Banner */}
-            {(() => {
-              const imgMeta = getFacilityImage(selectedEvent.facilityName);
-              return (
-                <div className="relative w-full h-36 sm:h-44 rounded-xl overflow-hidden border border-slate-200 bg-slate-900 group">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={imgMeta.imageUrl}
-                    alt={selectedEvent.facilityName}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  />
-                  <div className="absolute top-2.5 left-2.5">
-                    <span className="px-2.5 py-1 rounded-full bg-slate-950/70 backdrop-blur-xs text-[10px] font-extrabold text-amber-300 border border-amber-400/30">
-                      🏛️ {selectedEvent.facilityName}
-                    </span>
+            {/* Modal Body (Scrollable) */}
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+              {/* Landscape Facility Preview Banner */}
+              {(() => {
+                const imgMeta = getFacilityImage(selectedEvent.facilityName);
+                return (
+                  <div className="relative w-full h-40 sm:h-48 rounded-xl overflow-hidden border border-purple-200/60 bg-gradient-to-br from-purple-950 to-slate-900 shadow-inner group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={imgMeta.imageUrl}
+                      alt={selectedEvent.facilityName}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-3 py-1 rounded-full bg-slate-950/80 backdrop-blur-md text-[11px] font-extrabold text-amber-300 border border-amber-400/40 shadow-sm flex items-center gap-1.5">
+                        🏛️ {selectedEvent.facilityName}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
 
-            <div className="space-y-3.5 text-xs">
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">🏛️ Fasilitas yang Digunakan:</span>
-                  <strong className="text-slate-900 text-sm">{selectedEvent.facilityName}</strong>
-                  <div className="text-slate-500 text-[11px]">{selectedEvent.facilityLocation}</div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+              <div className="space-y-3.5 text-xs">
+                {/* Waktu & Lokasi Card */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2.5">
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Mulai Acara:</span>
-                    <strong className="text-slate-900">{fmtDateTime(selectedEvent.eventStart)}</strong>
+                    <span className="text-slate-400 block text-[11px] font-medium">🏛️ Fasilitas & Lokasi Kampus:</span>
+                    <strong className="text-slate-900 text-sm block mt-0.5">{selectedEvent.facilityName}</strong>
+                    <div className="text-slate-600 text-[11px]">{selectedEvent.facilityLocation}</div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2.5 border-t border-slate-200/70">
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Mulai Acara:</span>
+                      <strong className="text-slate-900 text-xs block mt-0.5">{fmtDateTime(selectedEvent.eventStart)}</strong>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 block text-[11px]">Selesai Acara:</span>
+                      <strong className="text-slate-900 text-xs block mt-0.5">{fmtDateTime(selectedEvent.eventEnd)}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Perihal / Tujuan */}
+                {selectedEvent.purpose && (
+                  <div className="bg-amber-50/40 p-3.5 rounded-xl border border-amber-200/60">
+                    <span className="text-amber-900/70 block text-[11px] font-semibold">🎯 Perihal / Tujuan Kegiatan:</span>
+                    <div className="text-slate-800 font-medium mt-0.5">{selectedEvent.purpose}</div>
+                  </div>
+                )}
+
+                {/* Deskripsi Kegiatan */}
+                {selectedEvent.description && (
+                  <div>
+                    <span className="text-slate-500 block text-[11px] font-semibold mb-1">📝 Deskripsi Rencana Kegiatan:</span>
+                    <div className="text-slate-700 bg-slate-50 p-3.5 rounded-xl border border-slate-200/70 whitespace-pre-wrap leading-relaxed">
+                      {selectedEvent.description}
+                    </div>
+                  </div>
+                )}
+
+                {/* Penanggung Jawab */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-purple-50/30 rounded-xl border border-purple-100">
+                  <div>
+                    <span className="text-slate-400 block text-[11px]">👤 Ketua Pelaksana:</span>
+                    <strong className="text-slate-800 text-xs block mt-0.5">{selectedEvent.leadName || "-"}</strong>
                   </div>
                   <div>
-                    <span className="text-slate-400 block text-[11px]">Selesai Acara:</span>
-                    <strong className="text-slate-900">{fmtDateTime(selectedEvent.eventEnd)}</strong>
+                    <span className="text-slate-400 block text-[11px]">📞 Kontak Penanggung Jawab:</span>
+                    <strong className="text-slate-800 text-xs block mt-0.5">{selectedEvent.leadContact || "-"}</strong>
                   </div>
-                </div>
-              </div>
-
-              <div>
-                <span className="text-slate-400 block text-[11px]">👥 Organisasi Penyelenggara:</span>
-                <strong className="text-blue-700 text-sm">{selectedEvent.orgName}</strong>
-              </div>
-
-              {selectedEvent.purpose && (
-                <div>
-                  <span className="text-slate-400 block text-[11px]">🎯 Perihal / Tujuan:</span>
-                  <div className="text-slate-800">{selectedEvent.purpose}</div>
-                </div>
-              )}
-
-              {selectedEvent.description && (
-                <div>
-                  <span className="text-slate-400 block text-[11px]">📝 Deskripsi Kegiatan:</span>
-                  <div className="text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 whitespace-pre-wrap">
-                    {selectedEvent.description}
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-                <div>
-                  <span className="text-slate-400 block text-[11px]">👤 Ketua Pelaksana:</span>
-                  <strong className="text-slate-800">{selectedEvent.leadName}</strong>
-                </div>
-                <div>
-                  <span className="text-slate-400 block text-[11px]">📞 Kontak Penanggung Jawab:</span>
-                  <strong className="text-slate-800">{selectedEvent.leadContact}</strong>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end pt-3 border-t border-slate-100">
+            {/* Modal Footer */}
+            <div className="p-4 sm:p-5 bg-slate-50 border-t border-slate-100 flex items-center justify-end">
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition cursor-pointer text-center"
+                className="w-full sm:w-auto px-6 py-2.5 bg-purple-800 hover:bg-purple-900 text-amber-300 rounded-xl font-bold text-xs transition cursor-pointer text-center shadow-xs"
               >
-                Tutup
+                Tutup Jendela
               </button>
             </div>
           </div>
