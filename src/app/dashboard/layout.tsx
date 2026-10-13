@@ -43,16 +43,16 @@ export default async function DashboardLayout({
                 Beranda
               </Link>
               <Link
-                href="/dashboard/kalender"
+                href="/dashboard#daftar-pengajuan"
                 className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition font-semibold"
               >
-                Kalender
+                Daftar Pengajuan
               </Link>
               <Link
                 href="/dashboard/aktivitas"
                 className="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition font-semibold"
               >
-                Riwayat Aktivitas
+                Histori Pengajuan
               </Link>
               {(user.role === "ADMIN" || user.role === "SUBBAG_UMUM") && (
                 <Link

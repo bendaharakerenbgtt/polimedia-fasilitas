@@ -5,6 +5,9 @@ import { bookingVisibility } from "@/server/access";
 import { BOOKING_STATUS_LABEL, ROLE_LABEL } from "@/lib/roles";
 import { fmtDateTime, fmtRange } from "@/lib/time";
 import { getAdminStats } from "@/server/admin";
+import { getCampusCalendarEvents } from "@/server/bookings";
+import CampusCalendarViewer from "./kalender/CampusCalendarViewer";
+import CompactNotifications from "./CompactNotifications";
 
 export const dynamic = "force-dynamic";
 
@@ -82,14 +85,20 @@ export default async function DashboardOverviewPage() {
       [user.organizationId, user.id, user.prodiId]
     );
   }
-  const notifications = await query<any>(
-    `SELECT id, title, body, link, created_at, read_at
-     FROM notifications
-     WHERE user_id = $1
-     ORDER BY created_at DESC
-     LIMIT 5`,
-    [user.id]
-  );
+  const [events, facilities, notifications] = await Promise.all([
+    getCampusCalendarEvents(),
+    query<{ id: string; name: string; category: string }>(
+      `SELECT id, name, category FROM facilities WHERE active = true ORDER BY name ASC`
+    ),
+    query<any>(
+      `SELECT id, title, body, link, created_at, read_at
+       FROM notifications
+       WHERE user_id = $1
+       ORDER BY created_at DESC
+       LIMIT 8`,
+      [user.id]
+    ),
+  ]);
 
   // Pisahkan pengajuan yang diajukan oleh organisasi sendiri vs permintaan masuk dari organisasi lain
   const isOrgAccount = user.role === "ORG" && Boolean(user.organizationId);
@@ -182,37 +191,72 @@ export default async function DashboardOverviewPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header Sambutan */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-blue-600">
-            {ROLE_LABEL[user.role]}
-          </span>
-          <h2 className="text-2xl font-extrabold text-slate-900 mt-1">
+      {/* Header Sambutan Modern */}
+      <div className="bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 text-white rounded-2xl p-6 sm:p-8 shadow-md border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-400/30 uppercase tracking-wider">
+              {ROLE_LABEL[user.role]} {user.organizationType ? `• ${user.organizationType}` : ""}
+            </span>
+            {user.organizationName && (
+              <span className="text-xs text-slate-300 font-medium">
+                {user.organizationName}
+              </span>
+            )}
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
             Selamat Datang, {user.displayName}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            {user.organizationName ? `Organisasi: ${user.organizationName}` : "Sistem Peminjaman Fasilitas Kampus PoliMedia"}
+          <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+            Kelola peminjaman fasilitas ruangan, pantau ketersediaan jadwal pada kalender di bawah, dan cek status pengajuan secara real-time.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Link
-            href="/dashboard/kalender"
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm rounded-xl transition shadow-2xs cursor-pointer"
-          >
-            <span>📅</span>
-            <span>Lihat Kalender Kegiatan Kampus</span>
-          </Link>
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
           {user.role === "ORG" && (
             <Link
               href="/dashboard/peminjaman/baru"
-              className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm rounded-xl transition shadow-xs cursor-pointer"
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm rounded-xl transition shadow-sm inline-flex items-center gap-1.5 cursor-pointer"
             >
-              + Ajukan Peminjaman Baru
+              <span>+</span>
+              <span>Ajukan Peminjaman Baru</span>
             </Link>
           )}
+          <a
+            href="#daftar-pengajuan"
+            className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm rounded-xl transition border border-white/15 cursor-pointer"
+          >
+            Daftar Pengajuan Saya ↓
+          </a>
         </div>
+      </div>
+
+      {/* Notifikasi Ringkas (Modern & Tidak Makan Tempat) */}
+      <CompactNotifications notifications={notifications} />
+
+      {/* Widget Kalender Kegiatan Kampus Interaktif Langsung di Muka Dashboard */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-7 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3.5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                Jadwal Ketersediaan Fasilitas
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-extrabold text-slate-900 mt-0.5">
+              Kalender Kegiatan Kampus PoliMedia
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Klik pada tanggal atau nama kegiatan untuk melihat organisasi peminjam dan rincian lengkapnya.
+            </p>
+          </div>
+          <div className="text-xs text-slate-400 font-medium">
+            Agenda 3 Bulan Aktif
+          </div>
+        </div>
+
+        <CampusCalendarViewer events={events} facilities={facilities} />
       </div>
 
       {/* ADMIN OVERVIEW & QUICK ACTIONS */}
@@ -341,38 +385,7 @@ export default async function DashboardOverviewPage() {
         </div>
       )}
 
-      {/* Notifikasi Aktivitas Terbaru */}
-      {notifications.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <span>🔔</span> Notifikasi & Aktivitas Terkini
-            </h3>
-            <span className="text-xs text-slate-400 font-medium">
-              {notifications.length} aktivitas terbaru
-            </span>
-          </div>
-          <div className="divide-y divide-slate-100">
-            {notifications.map((n: any) => (
-              <div key={n.id} className="py-2.5 flex items-start justify-between gap-4">
-                <div className="space-y-0.5">
-                  <div className="text-xs font-bold text-slate-800">{n.title}</div>
-                  <div className="text-xs text-slate-600 leading-relaxed">{n.body}</div>
-                  <div className="text-[10px] text-slate-400">{fmtDateTime(n.created_at)}</div>
-                </div>
-                {n.link && (
-                  <Link
-                    href={n.link}
-                    className="shrink-0 text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition"
-                  >
-                    Buka Detail →
-                  </Link>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+
 
       {/* Permohonan Perubahan Jadwal (Reschedule) & Pembatalan Masuk */}
       {pendingChanges.length > 0 && (
@@ -469,16 +482,24 @@ export default async function DashboardOverviewPage() {
 
       {/* TABEL 1: Jika Akun Organisasi (UKM / HIMA / BEM / MPM), pisahkan pengajuan milik sendiri */}
       {isOrgAccount && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+        <div id="daftar-pengajuan" className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden scroll-mt-20">
           <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <div>
               <h3 className="font-bold text-slate-900 text-base">
-                Pengajuan Peminjaman {user.organizationName || "Organisasi Kami"}
+                Daftar Pengajuan Peminjaman {user.organizationName || "Organisasi Kami"}
               </h3>
               <p className="text-xs text-slate-500">
                 Daftar permohonan fasilitas yang diajukan oleh akun organisasi Anda ({ownBookings.length})
               </p>
             </div>
+            {ownBookings.length > 0 && (
+              <Link
+                href="/dashboard/peminjaman/baru"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 transition"
+              >
+                + Ajukan Baru
+              </Link>
+            )}
           </div>
           {renderBookingTable(ownBookings, "Organisasi Anda belum mengajukan peminjaman fasilitas.", true)}
         </div>
@@ -488,7 +509,7 @@ export default async function DashboardOverviewPage() {
       {/* HANYA ditampilkan untuk peran peninjau/pejabat (BEM, MPM, Dosen, Kaprodi, Wadir, Subbag, Admin).
           UKM dan HIMA biasa tidak meninjau organisasi lain, sehingga tidak perlu melihat tabel ini. */}
       {(!isOrgAccount || isReviewerOrg || !["UKM", "HIMA"].includes(user.organizationType || "")) && (
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+        <div id={!isOrgAccount ? "daftar-pengajuan" : undefined} className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden scroll-mt-20">
           <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <div>
               <h3 className="font-bold text-slate-900 text-base">
