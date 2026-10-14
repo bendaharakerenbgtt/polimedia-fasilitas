@@ -349,18 +349,31 @@ export default function CampusCalendarViewer({
                   </div>
                 </div>
 
-                <div className="sm:text-right shrink-0 bg-slate-50/80 group-hover:bg-purple-50/70 p-3 sm:px-4 rounded-xl border border-slate-200/80 transition">
-                  <div className="text-xs font-bold text-slate-800">
-                    📅 {new Date(ev.eventStart).toLocaleDateString("id-ID", {
-                      weekday: "long",
-                      day: "numeric",
-                      month: "long",
-                      year: "numeric"
-                    })}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 shrink-0">
+                  <div className="sm:text-right shrink-0 bg-slate-50/80 group-hover:bg-purple-50/70 p-3 sm:px-4 rounded-xl border border-slate-200/80 transition">
+                    <div className="text-xs font-bold text-slate-800">
+                      📅 {new Date(ev.eventStart).toLocaleDateString("id-ID", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric"
+                      })}
+                    </div>
+                    <div className="text-xs font-semibold text-purple-800 mt-1">
+                      ⏰ {fmtTime(ev.eventStart)} - {fmtTime(ev.eventEnd)} WIB
+                    </div>
                   </div>
-                  <div className="text-xs font-semibold text-purple-800 mt-1">
-                    ⏰ {fmtTime(ev.eventStart)} - {fmtTime(ev.eventEnd)} WIB
-                  </div>
+                  {canViewDetail && (
+                    <Link
+                      href={`/dashboard/peminjaman/${ev.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs shrink-0"
+                      title="Buka Formulir Pengajuan"
+                    >
+                      <span>📋 Buka Formulir</span>
+                      <span>→</span>
+                    </Link>
+                  )}
                 </div>
               </div>
             ))
@@ -407,7 +420,7 @@ export default function CampusCalendarViewer({
                 {canViewDetail && (
                   <Link
                     href={`/dashboard/peminjaman/${selectedEvent.id}`}
-                    className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
                     title="Buka Formulir Pengajuan"
                   >
                     <span>📋 Buka Formulir</span>
@@ -427,6 +440,28 @@ export default function CampusCalendarViewer({
 
             {/* Modal Body (Scrollable) */}
             <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
+              {/* Action Banner Khusus Wadir & Subbag Umum */}
+              {canViewDetail && (
+                <div className="p-3.5 bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
+                  <div className="space-y-0.5">
+                    <span className="text-xs font-extrabold text-blue-950 flex items-center gap-1.5">
+                      <span>📋</span>
+                      <span>Formulir Pengajuan Fasilitas #{selectedEvent.code}</span>
+                    </span>
+                    <span className="text-[11px] text-blue-700 block">
+                      Akses langsung ke lembar rincian barang, susunan panitia, rundown, dan status verifikasi.
+                    </span>
+                  </div>
+                  <Link
+                    href={`/dashboard/peminjaman/${selectedEvent.id}`}
+                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold transition shrink-0 flex items-center justify-center gap-1.5 shadow-xs"
+                  >
+                    <span>Buka Formulir Lengkap</span>
+                    <span>→</span>
+                  </Link>
+                </div>
+              )}
+
               {/* Landscape Facility Preview Banner */}
               {(() => {
                 const imgMeta = getFacilityImage(selectedEvent.facilityName);
@@ -590,9 +625,23 @@ export default function CampusCalendarViewer({
                     {ev.title}
                   </h5>
 
-                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1">
-                    <span className="font-semibold text-purple-800">👥 {ev.orgName}</span>
-                    <span>🏛️ {ev.facilityName}</span>
+                  <div className="flex items-center justify-between text-xs text-slate-500 mt-1.5 pt-1.5 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span className="font-semibold text-purple-800 truncate">👥 {ev.orgName}</span>
+                      <span>•</span>
+                      <span className="truncate">🏛️ {ev.facilityName}</span>
+                    </div>
+                    {canViewDetail && (
+                      <Link
+                        href={`/dashboard/peminjaman/${ev.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold transition flex items-center gap-1 shadow-2xs shrink-0 ml-2"
+                        title="Buka Formulir Pengajuan"
+                      >
+                        <span>📋 Formulir</span>
+                        <span>→</span>
+                      </Link>
+                    )}
                   </div>
                 </div>
               ))}

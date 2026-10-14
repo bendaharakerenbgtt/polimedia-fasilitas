@@ -11,7 +11,7 @@ import { forbidden, notFound, type Actor } from "./core";
 export function bookingVisibility(actor: Actor, start = 1): [string, unknown[]] {
   const p = (n: number) => `$${start + n}`;
   if (OVERSIGHT_ROLES.includes(actor.role)) {
-    return [`(b.status <> 'DRAFT')`, []];
+    return [`(b.status <> 'DRAFT' OR b.created_by = ${p(0)})`, [actor.id]];
   }
   // Pihak yang tercantum sebagai penanda tangan pada tahapan pengajuan.
   const stepMatch = (cond: string) =>

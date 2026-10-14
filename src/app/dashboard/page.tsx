@@ -470,6 +470,7 @@ export default async function DashboardOverviewPage() {
       <DashboardTabSwitcher
         events={events}
         facilities={facilities}
+        userRole={user.role}
         bookingsCount={isOrgAccount ? ownBookings.length : reviewBookings.length}
         isOrgAccount={isOrgAccount}
         renderBookings={

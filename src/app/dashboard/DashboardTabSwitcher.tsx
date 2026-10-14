@@ -3,16 +3,19 @@
 import { useState, useEffect } from "react";
 import CampusCalendarViewer from "./kalender/CampusCalendarViewer";
 import type { CampusCalendarEvent } from "@/server/bookings";
+import type { Role } from "@/lib/roles";
 
 export default function DashboardTabSwitcher({
   events,
   facilities,
+  userRole,
   renderBookings,
   bookingsCount,
   isOrgAccount,
 }: {
   events: CampusCalendarEvent[];
   facilities: { id: string; name: string; category: string }[];
+  userRole?: Role;
   renderBookings: React.ReactNode;
   bookingsCount: number;
   isOrgAccount: boolean;
@@ -153,7 +156,7 @@ export default function DashboardTabSwitcher({
             </div>
           </div>
 
-          <CampusCalendarViewer events={events} facilities={facilities} />
+          <CampusCalendarViewer events={events} facilities={facilities} userRole={userRole} />
         </div>
       )}
     </div>
