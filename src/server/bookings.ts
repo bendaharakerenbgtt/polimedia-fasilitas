@@ -615,3 +615,181 @@ export async function getCampusCalendarEvents(): Promise<CampusCalendarEvent[]> 
     usageEnd: new Date(r.usage_end),
   }));
 }
+
+/**
+ * Pemakaian fasilitas internal oleh Pimpinan Kampus (WADIR) atau Pengelola Fasilitas (SUBBAG_UMUM):
+ * - Hanya butuh Nama Kegiatan, Deskripsi, Fasilitas, dan Waktu (Mulai/Selesai).
+ * - Tidak memerlukan tahapan rumit / proposal mahasiswa.
+ * - Dari WADIR: Masuk ke SUBBAG_UMUM (status PENDING dengan 1 tahap verifikasi Subbag Umum).
+ * - Dari SUBBAG_UMUM: Langsung disetujui (status APPROVED) tanpa perlu persetujuan lagi.
+ */
+export async function createInternalBooking(
+  actor: Actor,
+  input: {
+    facilityId: string;
+    title: string;
+    description?: string;
+    usageStart: Date;
+    eventStart?: Date;
+    eventEnd?: Date;
+    usageEnd: Date;
+  }
+) {
+  if (actor.role !== "WADIR" && actor.role !== "SUBBAG_UMUM") {
+    throw forbidden("Hanya Wakil Direktur atau Subbagian Umum yang dapat menggunakan fitur ini.");
+  }
+
+  const title = input.title.trim();
+  const description = (input.description ?? "").trim();
+  if (!title) {
+    throw new AppError("Nama kegiatan wajib diisi.", "VALIDATION");
+  }
+
+  // Jika waktu acara tidak diisi terpisah, samakan dengan waktu penggunaan fasilitas
+  const usageStart = input.usageStart;
+  const usageEnd = input.usageEnd;
+  const eventStart = input.eventStart ?? input.usageStart;
+  const eventEnd = input.eventEnd ?? input.usageEnd;
+
+  // Validasi waktu
+  scheduleSchema.parse({
+    usageStart,
+    eventStart,
+    eventEnd,
+    usageEnd,
+  });
+
+  return tx(async (client) => {
+    // Pastikan fasilitas aktif
+    const fac = await queryOne<{ id: string; name: string; active: boolean }>(
+      `SELECT id, name, active FROM facilities WHERE id = $1`,
+      [input.facilityId],
+      client
+    );
+    if (!fac || !fac.active) {
+      throw notFound("Fasilitas tidak ditemukan atau sedang tidak aktif.");
+    }
+
+    // Dapatkan organisasi default untuk pimpinan/internal kampus
+    let org = await queryOne<{ id: string }>(
+      `SELECT id FROM organizations WHERE type = 'BEM' LIMIT 1`,
+      [],
+      client
+    );
+    if (!org) {
+      org = await queryOne<{ id: string }>(
+        `SELECT id FROM organizations ORDER BY created_at ASC LIMIT 1`,
+        [],
+        client
+      );
+    }
+    if (!org) {
+      throw new AppError("Data organisasi kampus tidak ditemukan.", "STATE");
+    }
+
+    const code = await generateBookingCode(client);
+    const isWadir = actor.role === "WADIR";
+    const status = isWadir ? "PENDING" : "APPROVED";
+
+    const applicantLabel = isWadir
+      ? "Wakil Direktur Kemahasiswaan (Pimpinan Kampus)"
+      : "Subbagian Umum (Pengelola Fasilitas)";
+
+    // Insert booking
+    const booking = await queryOne<BookingRow>(
+      `INSERT INTO bookings (
+        code, organization_id, facility_id, status,
+        title, purpose, description,
+        usage_start, event_start, event_end, usage_end,
+        chair_name, chair_contact, lead_name, lead_contact,
+        other_parties, committee, rundown, special_notes,
+        created_by, submitted_at, decided_at, decided_by, decision_note
+      ) VALUES (
+        $1, $2, $3, $4,
+        $5, $6, $7,
+        $8, $9, $10, $11,
+        $12, $13, $14, $15,
+        '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, $16,
+        $17, now(), $18, $19, $20
+      ) RETURNING *`,
+      [
+        code,
+        org.id,
+        input.facilityId,
+        status,
+        title,
+        `Agenda Internal Kampus: ${title}`,
+        description,
+        usageStart,
+        eventStart,
+        eventEnd,
+        usageEnd,
+        applicantLabel,
+        "-",
+        applicantLabel,
+        "-",
+        `Penggunaan Fasilitas Langsung oleh ${applicantLabel}`,
+        actor.id,
+        !isWadir ? new Date() : null,
+        !isWadir ? actor.id : null,
+        !isWadir ? "Disetujui otomatis oleh Subbagian Umum (Pengelola Fasilitas)" : null,
+      ],
+      client
+    );
+
+    // Kunci slot fasilitas secara permanen (BOOKING)
+    await acquireLock(client, {
+      facilityId: input.facilityId,
+      bookingId: booking!.id,
+      kind: "BOOKING",
+      usageStart,
+      usageEnd,
+    });
+
+    if (isWadir) {
+      // Dari Wadir ke Subtim: Buat 1 approval step menuju SUBBAG_UMUM
+      await query(
+        `INSERT INTO approval_steps (
+          booking_id, step_order, label, resolver_type, resolver_role, is_final, status
+        ) VALUES ($1, 1, 'Subbagian Umum (Verifikasi & Pengesahan Fasilitas)', 'ROLE', 'SUBBAG_UMUM', true, 'PENDING')`,
+        [booking!.id],
+        client
+      );
+
+      // Beritahu personil Subbag Umum
+      const subbagUsers = await query<{ id: string }>(
+        `SELECT id FROM users WHERE role = 'SUBBAG_UMUM' AND active`,
+        [],
+        client
+      );
+      if (subbagUsers.length > 0) {
+        await notify(
+          client,
+          subbagUsers.map((u) => u.id),
+          "Agenda Penggunaan Fasilitas oleh WADIR",
+          `Wakil Direktur mengajukan penggunaan fasilitas "${fac.name}" untuk "${title}". Menunggu konfirmasi kesiapan sarana.`,
+          `/dashboard/peminjaman/${booking!.id}`
+        );
+      }
+    } else {
+      // Dari Subtim (Subbag Umum): Buat step yang langsung APPROVED
+      await query(
+        `INSERT INTO approval_steps (
+          booking_id, step_order, label, resolver_type, resolver_role, is_final, status, acted_by, acted_at, note
+        ) VALUES ($1, 1, 'Subbagian Umum (Pengelola Fasilitas)', 'ROLE', 'SUBBAG_UMUM', true, 'APPROVED', $2, now(), 'Penggunaan langsung oleh Subbagian Umum')`,
+        [booking!.id, actor.id],
+        client
+      );
+    }
+
+    await audit(client, actor, "INTERNAL_FACILITY_BOOKED", "booking", booking!.id, {
+      code,
+      title,
+      facilityName: fac.name,
+      status,
+      byRole: actor.role,
+    });
+
+    return booking!;
+  });
+}

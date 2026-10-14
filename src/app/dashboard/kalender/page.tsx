@@ -3,6 +3,7 @@ import { requireUser } from "@/server/auth";
 import { query } from "@/server/db";
 import { getCampusCalendarEvents } from "@/server/bookings";
 import CampusCalendarViewer from "./CampusCalendarViewer";
+import InternalBookingModal from "../InternalBookingModal";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,10 @@ export default async function CampusCalendarPage() {
             Pantau seluruh agenda pemakaian fasilitas dan kegiatan mahasiswa PoliMedia selama 3 bulan ini
           </p>
         </div>
+
+        {(user.role === "WADIR" || user.role === "SUBBAG_UMUM") && (
+          <InternalBookingModal userRole={user.role} facilities={facilities} />
+        )}
       </div>
 
       <CampusCalendarViewer events={events} facilities={facilities} userRole={user.role} />

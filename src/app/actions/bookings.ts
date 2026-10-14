@@ -316,3 +316,42 @@ export async function markNotificationReadAction(notificationId: string) {
     return { error: err?.message || "Gagal menandai notifikasi." };
   }
 }
+
+export async function createInternalBookingAction(prevState: any, formData: FormData) {
+  const user = await requireUser(["WADIR", "SUBBAG_UMUM"]);
+  const facilityId = String(formData.get("facilityId") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+  const usageStartStr = String(formData.get("usageStart") ?? "");
+  const usageEndStr = String(formData.get("usageEnd") ?? "");
+
+  const usageStart = parseLocalDateTime(usageStartStr);
+  const usageEnd = parseLocalDateTime(usageEndStr);
+
+  if (!facilityId || !title || !usageStart || !usageEnd) {
+    return { error: "Fasilitas, nama kegiatan, serta waktu mulai dan selesai wajib diisi." };
+  }
+
+  try {
+    const { createInternalBooking } = await import("@/server/bookings");
+    const booking = await createInternalBooking(user, {
+      facilityId,
+      title,
+      description,
+      usageStart,
+      usageEnd,
+    });
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/aktivitas");
+    revalidatePath("/dashboard/kalender");
+    redirect(`/dashboard/peminjaman/${booking.id}`);
+  } catch (err: any) {
+    if (err?.message === "NEXT_REDIRECT") throw err;
+    if (err?.issues && Array.isArray(err.issues)) {
+      return { error: err.issues.map((i: any) => i.message).join(", ") };
+    }
+    return { error: err?.message || "Gagal memproses pemakaian fasilitas." };
+  }
+}
+

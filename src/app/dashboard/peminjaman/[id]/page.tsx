@@ -34,6 +34,7 @@ export default async function BookingDetailPage({
       o.name AS org_name, o.type AS org_type,
       u.display_name AS created_by_name,
       u.username AS created_by_username,
+      u.role AS created_by_role,
       d.display_name AS decided_by_name
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
@@ -99,9 +100,17 @@ export default async function BookingDetailPage({
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="text-xs font-bold text-blue-600 tracking-wider">
-                {booking.org_name} {booking.created_by_username && <span className="font-mono text-blue-500 font-semibold">(@{booking.created_by_username})</span>}
-              </span>
+              {booking.created_by_role === "WADIR" || booking.created_by_role === "SUBBAG_UMUM" ? (
+                <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1.5">
+                  <span>🏛️</span>
+                  <span>Agenda Internal {booking.created_by_role === "WADIR" ? "Wakil Direktur" : "Subbagian Umum"}</span>
+                  <span className="font-mono text-amber-700 font-semibold">(@{booking.created_by_username})</span>
+                </span>
+              ) : (
+                <span className="text-xs font-bold text-blue-600 tracking-wider">
+                  {booking.org_name} {booking.created_by_username && <span className="font-mono text-blue-500 font-semibold">(@{booking.created_by_username})</span>}
+                </span>
+              )}
               <span className="text-slate-300">•</span>
               <span className="text-xs text-slate-500">
                 Diajukan: <strong className="text-slate-700">{fmtDateTime(booking.created_at)}</strong>
@@ -468,19 +477,23 @@ export default async function BookingDetailPage({
             <p className="text-slate-800 whitespace-pre-line leading-relaxed">{booking.description || "-"}</p>
           </div>
 
-          <div>
-            <span className="font-semibold text-slate-500 block">Ketua Organisasi</span>
-            <span className="text-slate-800 font-medium">
-              {booking.chair_name || "-"} {booking.chair_contact && `(${booking.chair_contact})`}
-            </span>
-          </div>
+          {booking.created_by_role !== "WADIR" && booking.created_by_role !== "SUBBAG_UMUM" && (
+            <>
+              <div>
+                <span className="font-semibold text-slate-500 block">Ketua Organisasi</span>
+                <span className="text-slate-800 font-medium">
+                  {booking.chair_name || "-"} {booking.chair_contact && `(${booking.chair_contact})`}
+                </span>
+              </div>
 
-          <div>
-            <span className="font-semibold text-slate-500 block">Ketua Pelaksana</span>
-            <span className="text-slate-800 font-medium">
-              {booking.lead_name || "-"} {booking.lead_contact && `(${booking.lead_contact})`}
-            </span>
-          </div>
+              <div>
+                <span className="font-semibold text-slate-500 block">Ketua Pelaksana</span>
+                <span className="text-slate-800 font-medium">
+                  {booking.lead_name || "-"} {booking.lead_contact && `(${booking.lead_contact})`}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Susunan Panitia Pelaksana */}

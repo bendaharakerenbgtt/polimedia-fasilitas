@@ -10,6 +10,7 @@ import CampusCalendarViewer from "./kalender/CampusCalendarViewer";
 import CompactNotifications from "./CompactNotifications";
 import DashboardTabSwitcher from "./DashboardTabSwitcher";
 import { getFacilityImage } from "@/lib/facilityImages";
+import InternalBookingModal from "./InternalBookingModal";
 
 export const dynamic = "force-dynamic";
 
@@ -229,6 +230,10 @@ export default async function DashboardOverviewPage() {
               <span>+</span>
               <span>Ajukan Peminjaman Baru</span>
             </Link>
+          )}
+
+          {(user.role === "WADIR" || user.role === "SUBBAG_UMUM") && (
+            <InternalBookingModal userRole={user.role} facilities={facilities} />
           )}
         </div>
       </div>
