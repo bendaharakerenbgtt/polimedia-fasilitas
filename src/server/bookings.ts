@@ -579,12 +579,12 @@ export async function getCampusCalendarEvents(): Promise<CampusCalendarEvent[]> 
       f.name AS facility_name,
       f.location AS facility_location,
       CASE
-        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(CASE WHEN jsonb_typeof(b.other_parties) = 'array' THEN b.other_parties->0->>'name' ELSE NULL END, ''), 'Acara PoliMedia')
         ELSE o.name
       END AS org_name,
       CASE
         WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
-        ELSE o.type
+        ELSE o.type::text
       END AS org_type,
       b.lead_name,
       b.lead_contact,

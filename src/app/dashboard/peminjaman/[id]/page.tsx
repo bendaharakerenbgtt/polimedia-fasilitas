@@ -39,7 +39,7 @@ export default async function BookingDetailPage({
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
     JOIN organizations o ON o.id = b.organization_id
-    JOIN users u ON u.id = b.created_by
+    LEFT JOIN users u ON u.id = b.created_by
     LEFT JOIN users d ON d.id = b.decided_by
     WHERE b.id = $1`,
     [id]

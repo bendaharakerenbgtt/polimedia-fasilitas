@@ -26,7 +26,7 @@ export default async function UserHistoriPage() {
         b.submitted_at, b.created_at, b.decision_note, b.cancel_reason,
         f.name AS facility_name, f.location AS facility_location,
         CASE
-          WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+          WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(CASE WHEN jsonb_typeof(b.other_parties) = 'array' THEN b.other_parties->0->>'name' ELSE NULL END, ''), 'Acara PoliMedia')
           ELSE o.name
         END AS org_name
       FROM bookings b

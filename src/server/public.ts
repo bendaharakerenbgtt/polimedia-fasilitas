@@ -62,12 +62,12 @@ export async function getPublicFacilities(db: Db = getPool()): Promise<PublicFac
           'bookingId', b.id,
           'title', b.title,
           'orgName', CASE
-            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(CASE WHEN jsonb_typeof(b.other_parties) = 'array' THEN b.other_parties->0->>'name' ELSE NULL END, ''), 'Acara PoliMedia')
             ELSE o.name
           END,
           'orgType', CASE
             WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
-            ELSE o.type
+            ELSE o.type::text
           END,
           'eventStart', b.event_start,
           'eventEnd', b.event_end,
@@ -87,12 +87,12 @@ export async function getPublicFacilities(db: Db = getPool()): Promise<PublicFac
           'bookingId', b.id,
           'title', b.title,
           'orgName', CASE
-            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(CASE WHEN jsonb_typeof(b.other_parties) = 'array' THEN b.other_parties->0->>'name' ELSE NULL END, ''), 'Acara PoliMedia')
             ELSE o.name
           END,
           'orgType', CASE
             WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
-            ELSE o.type
+            ELSE o.type::text
           END,
           'eventStart', b.event_start,
           'eventEnd', b.event_end
@@ -181,12 +181,12 @@ export async function getPublicConfirmedSchedules(
       f.location AS facility_location,
       b.title,
       CASE
-        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(CASE WHEN jsonb_typeof(b.other_parties) = 'array' THEN b.other_parties->0->>'name' ELSE NULL END, ''), 'Acara PoliMedia')
         ELSE o.name
       END AS org_name,
       CASE
         WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
-        ELSE o.type
+        ELSE o.type::text
       END AS org_type,
       b.event_start,
       b.event_end
@@ -315,12 +315,12 @@ export async function getPublicPetugasBookings(
       f.category AS facility_category,
       f.location AS facility_location,
       CASE
-        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(CASE WHEN jsonb_typeof(b.other_parties) = 'array' THEN b.other_parties->0->>'name' ELSE NULL END, ''), 'Acara PoliMedia')
         ELSE o.name
       END AS org_name,
       CASE
         WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
-        ELSE o.type
+        ELSE o.type::text
       END AS org_type,
       COALESCE(
         (
