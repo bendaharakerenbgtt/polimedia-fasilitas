@@ -105,8 +105,14 @@ export default async function HomePage() {
               >
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-md">
-                      {item.orgName} ({item.orgType})
+                    <span
+                      className={`text-xs font-bold px-2.5 py-1 rounded-md border ${
+                        item.orgType === "Internal Kampus"
+                          ? "text-amber-800 bg-amber-50 border-amber-200"
+                          : "text-blue-700 bg-blue-50 border-blue-200"
+                      }`}
+                    >
+                      {item.orgName} {item.orgType ? `(${item.orgType})` : ""}
                     </span>
                     <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
                       Resmi Disetujui
@@ -135,7 +141,7 @@ export default async function HomePage() {
                 </div>
 
                 <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-                  <span>PoliMedia Kampus</span>
+                  <span>{item.orgType === "Internal Kampus" ? "Penyelenggara Internal" : "PoliMedia Kampus"}</span>
                   <span className="text-blue-600 font-semibold">Terkonfirmasi</span>
                 </div>
               </div>

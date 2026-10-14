@@ -321,6 +321,7 @@ export async function createInternalBookingAction(prevState: any, formData: Form
   const user = await requireUser(["WADIR", "SUBBAG_UMUM"]);
   const facilityId = String(formData.get("facilityId") ?? "");
   const title = String(formData.get("title") ?? "").trim();
+  const delegation = String(formData.get("delegation") ?? "").trim() || "Acara PoliMedia";
   const description = String(formData.get("description") ?? "").trim();
   const usageStartStr = String(formData.get("usageStart") ?? "");
   const usageEndStr = String(formData.get("usageEnd") ?? "");
@@ -337,11 +338,14 @@ export async function createInternalBookingAction(prevState: any, formData: Form
     const booking = await createInternalBooking(user, {
       facilityId,
       title,
+      delegation,
       description,
       usageStart,
       usageEnd,
     });
 
+    revalidatePath("/");
+    revalidatePath("/petugas");
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/aktivitas");
     revalidatePath("/dashboard/kalender");

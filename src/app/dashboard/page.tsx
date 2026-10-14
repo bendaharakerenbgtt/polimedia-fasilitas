@@ -30,11 +30,15 @@ export default async function DashboardOverviewPage() {
       b.usage_start, b.usage_end, b.event_start, b.event_end,
       b.submitted_at, b.created_at,
       f.name AS facility_name,
-      o.name AS org_name,
+      CASE
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+        ELSE o.name
+      END AS org_name,
       (SELECT count(*) FROM change_requests cr WHERE cr.booking_id = b.id AND cr.status = 'PENDING') AS pending_changes
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
     JOIN organizations o ON o.id = b.organization_id
+    LEFT JOIN users u ON u.id = b.created_by
     WHERE ${pred} AND b.archived_at IS NULL
     ORDER BY b.created_at DESC
     LIMIT 50`,

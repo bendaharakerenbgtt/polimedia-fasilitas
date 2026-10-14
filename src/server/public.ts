@@ -61,14 +61,21 @@ export async function getPublicFacilities(db: Db = getPool()): Promise<PublicFac
         SELECT json_build_object(
           'bookingId', b.id,
           'title', b.title,
-          'orgName', o.name,
-          'orgType', o.type,
+          'orgName', CASE
+            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+            ELSE o.name
+          END,
+          'orgType', CASE
+            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
+            ELSE o.type
+          END,
           'eventStart', b.event_start,
           'eventEnd', b.event_end,
           'usageEnd', b.usage_end
         )
         FROM bookings b
         JOIN organizations o ON o.id = b.organization_id
+        LEFT JOIN users u ON u.id = b.created_by
         WHERE b.facility_id = f.id
           AND b.status = 'APPROVED'
           AND now() >= b.usage_start AND now() <= b.usage_end
@@ -79,13 +86,20 @@ export async function getPublicFacilities(db: Db = getPool()): Promise<PublicFac
         SELECT json_build_object(
           'bookingId', b.id,
           'title', b.title,
-          'orgName', o.name,
-          'orgType', o.type,
+          'orgName', CASE
+            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+            ELSE o.name
+          END,
+          'orgType', CASE
+            WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
+            ELSE o.type
+          END,
           'eventStart', b.event_start,
           'eventEnd', b.event_end
         )
         FROM bookings b
         JOIN organizations o ON o.id = b.organization_id
+        LEFT JOIN users u ON u.id = b.created_by
         WHERE b.facility_id = f.id
           AND b.status = 'APPROVED'
           AND b.usage_start > now()
@@ -166,13 +180,20 @@ export async function getPublicConfirmedSchedules(
       f.name AS facility_name,
       f.location AS facility_location,
       b.title,
-      o.name AS org_name,
-      o.type AS org_type,
+      CASE
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+        ELSE o.name
+      END AS org_name,
+      CASE
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
+        ELSE o.type
+      END AS org_type,
       b.event_start,
       b.event_end
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
     JOIN organizations o ON o.id = b.organization_id
+    LEFT JOIN users u ON u.id = b.created_by
     WHERE b.status = 'APPROVED'
       AND b.event_end >= (now() - interval '1 day')
       ${filter}
@@ -293,8 +314,14 @@ export async function getPublicPetugasBookings(
       f.name AS facility_name,
       f.category AS facility_category,
       f.location AS facility_location,
-      o.name AS org_name,
-      o.type AS org_type,
+      CASE
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+        ELSE o.name
+      END AS org_name,
+      CASE
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
+        ELSE o.type
+      END AS org_type,
       COALESCE(
         (
           SELECT json_agg(
@@ -312,6 +339,7 @@ export async function getPublicPetugasBookings(
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
     JOIN organizations o ON o.id = b.organization_id
+    LEFT JOIN users u ON u.id = b.created_by
     WHERE ${whereClause}
     ORDER BY b.usage_start ASC
     LIMIT 200`,

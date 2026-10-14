@@ -18,6 +18,7 @@ export default function InternalBookingModal({
   // Form State
   const [facilityId, setFacilityId] = useState("");
   const [title, setTitle] = useState("");
+  const [delegation, setDelegation] = useState("");
   const [description, setDescription] = useState("");
 
   const [date, setDate] = useState("");
@@ -73,6 +74,7 @@ export default function InternalBookingModal({
     const formData = new FormData();
     formData.append("facilityId", facilityId);
     formData.append("title", title);
+    formData.append("delegation", delegation.trim() || "Acara PoliMedia");
     formData.append("description", description);
     formData.append("usageStart", `${date}T${usageStartHour}`);
     formData.append("usageEnd", `${date}T${usageEndHour}`);
@@ -161,7 +163,24 @@ export default function InternalBookingModal({
                 />
               </div>
 
-              {/* 2. Deskripsi Kegiatan */}
+              {/* 2. Delegasi / Penyelenggara (Opsional) */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Delegasi / Penyelenggara Acara (Opsional)
+                </label>
+                <input
+                  type="text"
+                  value={delegation}
+                  onChange={(e) => setDelegation(e.target.value)}
+                  placeholder="Default: Acara PoliMedia (atau isi misal: LLDIKTI, Kemendikbudristek, Senat...)"
+                  className="w-full px-3.5 py-2.5 bg-white text-slate-900 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:border-amber-500 font-medium text-xs outline-none"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Opsional. Jika tidak diisi, otomatis ditampilkan sebagai <strong>&quot;Acara PoliMedia&quot;</strong> di portal publik.
+                </p>
+              </div>
+
+              {/* 3. Deskripsi Kegiatan */}
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
                   Deskripsi Kegiatan (Opsional)

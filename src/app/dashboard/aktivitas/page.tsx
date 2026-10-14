@@ -25,10 +25,14 @@ export default async function UserHistoriPage() {
         b.usage_start, b.usage_end, b.event_start, b.event_end,
         b.submitted_at, b.created_at, b.decision_note, b.cancel_reason,
         f.name AS facility_name, f.location AS facility_location,
-        o.name AS org_name
+        CASE
+          WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+          ELSE o.name
+        END AS org_name
       FROM bookings b
       JOIN facilities f ON f.id = b.facility_id
       JOIN organizations o ON o.id = b.organization_id
+      LEFT JOIN users u ON u.id = b.created_by
       WHERE ${pred}
         AND (
           b.archived_at IS NOT NULL

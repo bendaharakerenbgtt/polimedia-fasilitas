@@ -578,8 +578,14 @@ export async function getCampusCalendarEvents(): Promise<CampusCalendarEvent[]> 
       b.facility_id,
       f.name AS facility_name,
       f.location AS facility_location,
-      o.name AS org_name,
-      o.type AS org_type,
+      CASE
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN COALESCE(NULLIF(b.other_parties->0->>'name', ''), 'Acara PoliMedia')
+        ELSE o.name
+      END AS org_name,
+      CASE
+        WHEN u.role IN ('WADIR', 'SUBBAG_UMUM') THEN 'Internal Kampus'
+        ELSE o.type
+      END AS org_type,
       b.lead_name,
       b.lead_contact,
       b.usage_start,
@@ -589,6 +595,7 @@ export async function getCampusCalendarEvents(): Promise<CampusCalendarEvent[]> 
     FROM bookings b
     JOIN facilities f ON f.id = b.facility_id
     JOIN organizations o ON o.id = b.organization_id
+    LEFT JOIN users u ON u.id = b.created_by
     WHERE b.status IN ('APPROVED', 'PENDING', 'COMPLETED')
       AND b.event_end >= (now() - interval '30 days')
       AND b.event_start <= (now() + interval '90 days')
@@ -618,8 +625,8 @@ export async function getCampusCalendarEvents(): Promise<CampusCalendarEvent[]> 
 
 /**
  * Pemakaian fasilitas internal oleh Pimpinan Kampus (WADIR) atau Pengelola Fasilitas (SUBBAG_UMUM):
- * - Hanya butuh Nama Kegiatan, Deskripsi, Fasilitas, dan Waktu (Mulai/Selesai).
- * - Tidak memerlukan tahapan rumit / proposal mahasiswa.
+ * - Hanya butuh Nama Kegiatan, Delegasi/Penyelenggara, Deskripsi, Fasilitas, dan Waktu (Mulai/Selesai).
+ * - Delegasi bersifat opsional, otomatis "Acara PoliMedia" jika kosong.
  * - Dari WADIR: Masuk ke SUBBAG_UMUM (status PENDING dengan 1 tahap verifikasi Subbag Umum).
  * - Dari SUBBAG_UMUM: Langsung disetujui (status APPROVED) tanpa perlu persetujuan lagi.
  */
@@ -628,6 +635,7 @@ export async function createInternalBooking(
   input: {
     facilityId: string;
     title: string;
+    delegation?: string;
     description?: string;
     usageStart: Date;
     eventStart?: Date;
@@ -641,6 +649,7 @@ export async function createInternalBooking(
 
   const title = input.title.trim();
   const description = (input.description ?? "").trim();
+  const delegation = (input.delegation ?? "").trim() || "Acara PoliMedia";
   if (!title) {
     throw new AppError("Nama kegiatan wajib diisi.", "VALIDATION");
   }
@@ -695,7 +704,11 @@ export async function createInternalBooking(
       ? "Wakil Direktur Kemahasiswaan (Pimpinan Kampus)"
       : "Subbagian Umum (Pengelola Fasilitas)";
 
-    // Insert booking
+    // Insert booking dengan delegation di other_parties
+    const otherPartiesJson = JSON.stringify([
+      { name: delegation, role: "Penyelenggara / Delegasi" }
+    ]);
+
     const booking = await queryOne<BookingRow>(
       `INSERT INTO bookings (
         code, organization_id, facility_id, status,
@@ -709,8 +722,8 @@ export async function createInternalBooking(
         $5, $6, $7,
         $8, $9, $10, $11,
         $12, $13, $14, $15,
-        '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, $16,
-        $17, now(), $18, $19, $20
+        $16::jsonb, '[]'::jsonb, '[]'::jsonb, $17,
+        $18, now(), $19, $20, $21
       ) RETURNING *`,
       [
         code,
@@ -718,17 +731,18 @@ export async function createInternalBooking(
         input.facilityId,
         status,
         title,
-        `Agenda Internal Kampus: ${title}`,
+        `[${delegation}] Agenda Internal Kampus: ${title}`,
         description,
         usageStart,
         eventStart,
         eventEnd,
         usageEnd,
-        applicantLabel,
+        delegation,
         "-",
         applicantLabel,
         "-",
-        `Penggunaan Fasilitas Langsung oleh ${applicantLabel}`,
+        otherPartiesJson,
+        `Penyelenggara / Delegasi: ${delegation}\nPenggunaan Fasilitas Langsung oleh ${applicantLabel}`,
         actor.id,
         !isWadir ? new Date() : null,
         !isWadir ? actor.id : null,

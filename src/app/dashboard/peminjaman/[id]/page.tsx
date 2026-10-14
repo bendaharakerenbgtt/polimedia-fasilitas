@@ -101,9 +101,14 @@ export default async function BookingDetailPage({
           <div>
             <div className="flex items-center gap-2.5">
               {booking.created_by_role === "WADIR" || booking.created_by_role === "SUBBAG_UMUM" ? (
-                <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1.5">
+                <span className="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-md tracking-wider flex items-center gap-1.5 flex-wrap">
                   <span>🏛️</span>
                   <span>Agenda Internal {booking.created_by_role === "WADIR" ? "Wakil Direktur" : "Subbagian Umum"}</span>
+                  {booking.other_parties?.[0]?.name && (
+                    <span className="text-purple-900 font-extrabold bg-purple-100/70 px-1.5 py-0.5 rounded text-[11px]">
+                      {booking.other_parties[0].name}
+                    </span>
+                  )}
                   <span className="font-mono text-amber-700 font-semibold">(@{booking.created_by_username})</span>
                 </span>
               ) : (
@@ -477,7 +482,14 @@ export default async function BookingDetailPage({
             <p className="text-slate-800 whitespace-pre-line leading-relaxed">{booking.description || "-"}</p>
           </div>
 
-          {booking.created_by_role !== "WADIR" && booking.created_by_role !== "SUBBAG_UMUM" && (
+          {booking.created_by_role === "WADIR" || booking.created_by_role === "SUBBAG_UMUM" ? (
+            <div className="md:col-span-2">
+              <span className="font-semibold text-slate-500 block">Delegasi / Penyelenggara Acara</span>
+              <span className="text-slate-900 font-bold text-sm">
+                {booking.other_parties?.[0]?.name || "Acara PoliMedia"}
+              </span>
+            </div>
+          ) : (
             <>
               <div>
                 <span className="font-semibold text-slate-500 block">Ketua Organisasi</span>
