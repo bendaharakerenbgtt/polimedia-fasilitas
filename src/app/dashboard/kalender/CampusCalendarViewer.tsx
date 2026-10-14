@@ -416,52 +416,18 @@ export default function CampusCalendarViewer({
                   Oleh: {selectedEvent.orgName}
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {canViewDetail && (
-                  <Link
-                    href={`/dashboard/peminjaman/${selectedEvent.id}`}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow-xs"
-                    title="Buka Formulir Pengajuan"
-                  >
-                    <span>📋 Buka Formulir</span>
-                    <span>→</span>
-                  </Link>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setSelectedEvent(null)}
-                  className="w-8 h-8 rounded-full bg-white/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-base transition cursor-pointer shadow-2xs shrink-0"
-                  title="Tutup"
-                >
-                  ✕
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedEvent(null)}
+                className="w-8 h-8 rounded-full bg-white/80 hover:bg-slate-200 text-slate-500 hover:text-slate-800 flex items-center justify-center font-bold text-base transition cursor-pointer shadow-2xs shrink-0"
+                title="Tutup"
+              >
+                ✕
+              </button>
             </div>
 
             {/* Modal Body (Scrollable) */}
             <div className="p-5 sm:p-6 space-y-4 overflow-y-auto">
-              {/* Action Banner Khusus Wadir & Subbag Umum */}
-              {canViewDetail && (
-                <div className="p-3.5 bg-gradient-to-r from-blue-50 via-indigo-50/50 to-blue-50 border border-blue-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shadow-2xs">
-                  <div className="space-y-0.5">
-                    <span className="text-xs font-extrabold text-blue-950 flex items-center gap-1.5">
-                      <span>📋</span>
-                      <span>Formulir Pengajuan Fasilitas #{selectedEvent.code}</span>
-                    </span>
-                    <span className="text-[11px] text-blue-700 block">
-                      Akses langsung ke lembar rincian barang, susunan panitia, rundown, dan status verifikasi.
-                    </span>
-                  </div>
-                  <Link
-                    href={`/dashboard/peminjaman/${selectedEvent.id}`}
-                    className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-extrabold transition shrink-0 flex items-center justify-center gap-1.5 shadow-xs"
-                  >
-                    <span>Buka Formulir Lengkap</span>
-                    <span>→</span>
-                  </Link>
-                </div>
-              )}
-
               {/* Landscape Facility Preview Banner */}
               {(() => {
                 const imgMeta = getFacilityImage(selectedEvent.facilityName);
@@ -543,7 +509,7 @@ export default function CampusCalendarViewer({
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs transition shadow-xs"
                 >
                   <span>📋</span>
-                  <span>Buka Lembar Formulir Pengajuan Lengkap</span>
+                  <span>Buka Formulir Pengajuan</span>
                   <span className="text-blue-200">→</span>
                 </Link>
               ) : (
